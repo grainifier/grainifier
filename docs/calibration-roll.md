@@ -2,16 +2,16 @@
 
 Purpose: measure (a) the characteristic curve D(log E) for *your* process and (b) clean grain statistics at known densities, and (c) the scanner's noise, all from one roll.
 
-## Shooting
-- Camera: M6, same lens for all rolls, aperture f/5.6–8 (avoid vignetting; keep the card away from frame edges or note it).
-- Target: an 18 % grey card filling the frame, evenly lit (overcast sky or a wall in shade), defocused slightly so card texture doesn't register.
-- Bracket in ⅓-stop steps from −5 to +5 stops around metered exposure (≈ 31 frames). Use shutter speed for the bracket where possible (reciprocity is negligible in this range); note each frame's speed/aperture on paper.
-- Leave 2 frames fully unexposed (lens cap) → base+fog (Dmin); shoot 1 frame at +8 stops (or the sun) → Dmax.
-- Optional but very useful: a Stouffer 21-step transmission wedge contact-printed/photographed on 2 frames gives an independent D(log E) check.
-- Repeat per combination you actually use: HP5+ @400 / @1600 (+2) / +1, BWXX @250 / +2, Tri-X, FP4+ home-dev. Log the developer, dilution, time, temperature, agitation.
+## Shooting (checklist)
+- Target: matte 18 % grey card, **over-filling the frame** (50 mm at ~0.7–1 m on an A4 card, edges well outside the finder). Slightly **defocused** (focus at ~2 m) so paper texture doesn't register.
+- Light: **overcast sky / open shade outdoors**, card ~45° to the sky, no glare, no direct sun. No LED panels unless known flicker-free (PWM + fast shutter = random exposure errors). Meter at start and end of the sequence; redo if it drifted.
+- Aperture f/5.6–f/8 for the bracket (vignetting ≤ ~0.2 stop; the curve is fitted on the central ~60 % of the frame).
+- Sequence per roll: meter the card ("0"); **shutter bracket in full stops −5…+5 at fixed aperture** (11 frames); repeat with the aperture closed ½ stop (11 frames) → ½-stop spacing. All exposures ≤ 1 s (reciprocity). **2 frames lens cap on** (Dmin), **1 frame ≈ +8 stops** (Dmax). **1 frame slanted edge** (black card on the grey card, edge tilted ~5°, in focus, f/5.6) → whole-chain MTF, separates scanner MTF from grain. Remaining frames: ordinary pictures.
+- Log every frame: shutter, aperture, meter reading, light. Develop **exactly as usual** (same lab / push order as the archive) so the curve describes the rolls already profiled.
+- Rolls: HP5+ @1600 first, then BWXX @250; HP5+ @400 optional.
 
 ## Scanning (Coolscan V / VueScan)
-- Same settings for every calibration frame *and* for the frames you'll later profile: 4000 dpi, 16-bit, RAW DNG output, no ICE (B&W silver blocks IR), no sharpening, no multi-exposure, fixed exposure/analog gain (lock it — VueScan auto-exposure changes the effective transmittance scale between frames).
+- **Single pass**, 4000 dpi, 16-bit RAW DNG, no ICE (silver blocks IR anyway), no sharpening, no multi-exposure. **Lock exposure** on the mid-grey frame (VueScan: preview → *Lock exposure* → *Lock film base color*) and scan every frame of the roll with those locks — with auto-exposure the densities of different frames are not comparable.
 - Scan each of ~6 representative density steps 8× (multi-pass by re-running the scan, not VueScan's "multi-sample" averaging) → scanner noise = variance across passes; grain = variance within the averaged image.
 - Also scan a blank (no film) frame → scanner noise at T = 1.
 
