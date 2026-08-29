@@ -38,3 +38,28 @@ Grain σ_D at 10th percentile (≈ flat patches), BWXX 1023_0001 / HP5@1600 raw2
 - Autocorrelation of grain residual: lag1 ≈ 0.68–0.79, lag2 ≈ 0.18–0.44, ≈0 by lag 4 → grain clumps span ~2–4 px (13–25 µm); anisotropic (scanner MTF).
 - R/G/B correlation of the residual in flat midtones 0.92–0.96 → the common component is silver grain, the rest is scanner noise. Use this to separate the two.
 - Skewness ≈ 0 → Gaussian regime (Zhang/Pappas), not the "individual grains" regime.
+
+## Results — HP5+ @ EI 1600 profile (2026-08-29, `profiles/hp5-plus-ei1600.json`)
+
+494 frames, 13 rolls, 10.4 M patches (32 px), 3.1 M weak-texture patches. Nikon LS-50, 4000 dpi.
+
+| D | σ_D / px (median) | σ_D 10th pct | grain (R/G/B common) | scanner (G) | ac lag1 x / y | skew | kurt |
+|---|---|---|---|---|---|---|---|
+| 0.05 | 0.048 | 0.002 | 0.050 | 0 | 0.61 / 0.48 | +0.93 | 3.85 |
+| 0.55 | 0.082 | 0.057 | 0.083 | 0 | 0.59 / 0.41 | +0.14 | 2.93 |
+| 1.05 | 0.089 | 0.062 | 0.091 | 0 | 0.61 / 0.42 | +0.02 | 2.91 |
+| 1.55 | 0.095 | 0.064 | 0.098 | 0 | 0.62 / 0.45 | −0.08 | 2.93 |
+| 2.05 | 0.097 | 0.070 | 0.100 | 0 | 0.64 / 0.45 | −0.26 | 3.02 |
+| 2.45 | 0.065 | 0.033 | 0.062 | 0.030 | 0.60 / 0.39 | −0.24 | 3.21 |
+| 2.85 | 0.067 | 0.041 | 0.019 | 0.063 | 0.31 / 0.05 | +0.41 | 3.23 |
+
+Findings
+- **σ_D(D)**: 0.048 at base+fog, rising to ≈0.08 by D 0.5 and a broad plateau ≈0.09–0.10 for D 1.0–2.3. Above D≈2.4 the LS-50 hits its noise floor: channel correlation collapses (1.0 → 0), the common-mode "grain" estimate falls and the channel-independent "scanner" term rises — the profile is trustworthy for D ≤ 2.3, which covers 95 % of the patches on these negatives anyway.
+- **Scanner noise is negligible below D≈2.3** — the R/G/B residuals are >0.98 correlated, so at 4000 dpi what the scan shows in the midtones is silver, not CCD noise. (Caveat: mechanical/banding noise common to all channels would be counted as grain; the re-scan experiment in `plan-existing-data.md` §2.2 tests that.)
+- **Skewness flips sign at D≈1.1**: +0.9 at Dmin (a few dark specks on clear film) → 0 → −0.34 at D≈2.3 (a few clear holes in dense silver). That is exactly what a Boolean model predicts as coverage crosses 50 %, and it is measurable in real scans at 6.35 µm/px. Kurtosis ≈ 2.9–3.0 throughout: Gaussian marginals are a fine approximation, but the skew should be reproduced by the renderer (it is what makes shadows and highlights look different).
+- **Correlation structure**: lag-1 ≈ 0.60 (x) / 0.43 (y), lag-2 ≈ 0.13 / 0.10, ~0 by lag 4; correlation area ≈ 3.7–4.1 px² (|lag| ≤ 6). Anisotropic and nearly constant with density → one 2-D NPS shape scaled by σ_D(D) would already be a good renderer; the profile stores the full per-bin NPS regardless.
+- **Selwyn-scaled granularity** (σ at 48 µm circular aperture): 0.025–0.029 for D 1–2 → "RMS granularity" ≈ 25–28. Tri-X 400 is 17 at box speed; HP5+ pushed two stops being ~1.5× coarser is plausible. Absolute calibration against a microdensitometer needs the calibration roll (specular scanner geometry / Callier effect may inflate the number).
+- **Roll-to-roll spread is real and large**: σ_D at D=1.0 spans 0.067–0.124 (1.8×). The grainiest rolls (1022, 1297, 8912) also have the highest base+fog (0.14–0.15 vs 0.04–0.07), i.e. they were developed harder. So "HP5+ @1600" is a family of profiles keyed by development, not one number; the profile should carry a spread (per-roll σ scale) that the renderer exposes as a "push/development" control. Roll 2094 was scanned greyscale (1 channel) and is the least grainy — treat as suspect until re-scanned RGB.
+- Density histogram of the whole HP5@1600 archive peaks at D 0.1–0.4 (thin, shadow-heavy negatives — pushed film) with a long tail to 2.5.
+
+Next: renderer (`grainifier render`) driven by this JSON; BWXX / Tri-X / FP4+ profiles with the same tool (`data/*-rolls.txt`); re-scan experiment to validate the scanner split.
