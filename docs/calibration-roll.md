@@ -19,3 +19,10 @@ Purpose: measure (a) the characteristic curve D(log E) for *your* process and (b
 - D(log E) per process → the tone curve used by the renderer.
 - σ_D(D), full 2-D noise-power spectrum per D, skew/kurtosis per D, with scanner noise removed exactly.
 - Absolute granularity check against datasheet RMS values.
+
+## Re-scan check (planned with the next roll)
+Pick one frame with a large smooth midtone area (sky/wall, D≈1). Scan it, without moving the strip between scans:
+1. 1 pass, RAW DNG — `rescan_1pass_a.dng`
+2. 1 pass again — `rescan_1pass_b.dng` (pass-to-pass difference = scanner noise + jitter, directly)
+3. 3 passes — `rescan_3pass.dng`
+Same VueScan exposure lock, no ICE/sharpening. Analysis: `grainifier frame` on each, then ratio of the green NPS at D 0.8–1.3 (3-pass ÷ 1-pass) → |MTF_jitter|², to be compared with the across-roll fit σ ≈ 0.42/0.50 px; a−b difference image → per-pixel scanner noise and the registration error between passes.
