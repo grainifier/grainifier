@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grainifier"
+version = "0.0.1"
+description = "Measure real film grain from scans and apply it to digital images"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+plots = ["matplotlib"]
+
+[project.scripts]
+grainifier = "grainifier.cli:main"
+
+[tool.setuptools]
+packages = ["grainifier"]

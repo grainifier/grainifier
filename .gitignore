@@ -1,0 +1,14 @@
+# third-party code and environments used only for comparison
+eval/repos/
+eval/.venv/
+eval/outputs/*.tiff
+# copyrighted PDFs (see docs/research-notes.md for links)
+docs/papers/
+# scan data and per-frame caches
+data/frames/
+*.dng
+*.npz
+__pycache__/
+*.egg-info/
+.DS_Store
+data/frames/

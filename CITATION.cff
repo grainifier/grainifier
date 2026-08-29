@@ -1,0 +1,99 @@
+cff-version: 1.2.0
+message: "If grainifier is useful in your work, please cite it, and please also cite the papers it builds on (see README.md, 'Built on')."
+title: "grainifier: real film grain measured from scans, applied to digital images"
+type: software
+authors:
+  - family-names: Fyhr
+    given-names: Pontus
+license: MIT
+repository-code: "https://github.com/grainifier/grainifier"
+version: 0.0.1
+date-released: 2026-08-29
+keywords:
+  - film grain
+  - photographic emulsion
+  - noise power spectrum
+  - image processing
+references:
+  - type: article
+    title: "A Stochastic Film Grain Model for Resolution-Independent Rendering"
+    authors:
+      - family-names: Newson
+        given-names: Alasdair
+      - family-names: Delon
+        given-names: Julie
+      - family-names: Galerne
+        given-names: Bruno
+    journal: "Computer Graphics Forum"
+    volume: 36
+    issue: 8
+    year: 2017
+    doi: 10.1111/cgf.13159
+  - type: article
+    title: "Realistic Film Grain Rendering"
+    authors:
+      - family-names: Newson
+        given-names: Alasdair
+      - family-names: Faraj
+        given-names: Noura
+      - family-names: Delon
+        given-names: Julie
+      - family-names: Galerne
+        given-names: Bruno
+    journal: "Image Processing On Line"
+    volume: 7
+    year: 2017
+    doi: 10.5201/ipol.2017.192
+  - type: article
+    title: "Film Grain Rendering and Parameter Estimation"
+    authors:
+      - family-names: Zhang
+        given-names: Kaixuan
+      - family-names: Wang
+        given-names: Jingxian
+      - family-names: Tian
+        given-names: Daizong
+      - family-names: Pappas
+        given-names: Thrasyvoulos N.
+    journal: "ACM Transactions on Graphics"
+    volume: 42
+    issue: 4
+    year: 2023
+    doi: 10.1145/3592127
+  - type: article
+    title: "Neural Film Grain Rendering"
+    authors:
+      - family-names: Lesné
+        given-names: Gwilherm
+      - family-names: Gousseau
+        given-names: Yann
+      - family-names: Ladjal
+        given-names: Saïd
+      - family-names: Newson
+        given-names: Alasdair
+    journal: "Computer Graphics Forum"
+    volume: 44
+    year: 2025
+    doi: 10.1111/cgf.70076
+  - type: conference-paper
+    title: "Simulating Film Grain using the Noise-Power Spectrum"
+    authors:
+      - family-names: Stephenson
+        given-names: Ian
+      - family-names: Saunders
+        given-names: Arthur
+    conference:
+      name: "Theory and Practice of Computer Graphics (Eurographics UK)"
+    year: 2007
+    doi: 10.2312/LocalChapterEvents/TPCG/TPCG07/069-072
+  - type: conference-paper
+    title: "Film Grain Synthesis for AV1 Video Codec"
+    authors:
+      - family-names: Norkin
+        given-names: Andrey
+      - family-names: Birkbeck
+        given-names: Neil
+    conference:
+      name: "Data Compression Conference (DCC)"
+    year: 2018
+    doi: 10.1109/DCC.2018.00011
