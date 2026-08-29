@@ -5,6 +5,7 @@
                                                 stream every DNG in the listed remote
                                                 directories over ssh, cache per-frame npz
     grainifier aggregate data/frames/NAME -o profiles/NAME.json [--plots DIR]
+    grainifier render IN.png OUT.png --profile profiles/NAME.json [--film-width-mm 36 ...]
 """
 from __future__ import annotations
 
@@ -89,7 +90,7 @@ def cmd_aggregate(a):
     from .profile import aggregate, load_frames, plot_profile, write_profile
 
     frames = load_frames(Path(a.frames))
-    prof = aggregate(frames, min_width=a.min_width)
+    prof = aggregate(frames, min_width=a.min_width, software_contains=a.software, rolls_contain=a.rolls)
     meta = dict(
         name=a.name or Path(a.frames).name,
         stock=a.stock, exposure_index=a.ei, developer=a.developer,
@@ -112,6 +113,25 @@ def cmd_aggregate(a):
     if a.plots:
         for f in plot_profile(prof, Path(a.plots), title=meta["name"]):
             print("plot:", f)
+
+
+def cmd_render(a):
+    from .render import Curve, GrainProfile, load_image_linear, render_image, save_image
+
+    prof = GrainProfile(a.profile)
+    curve = Curve(fog=a.fog, dmax=a.dmax, gamma=a.gamma, mid_density=a.mid_density)
+    lum = load_image_linear(a.input, assume_linear=a.linear_input)
+    if a.exposure:
+        lum = lum * (2.0 ** a.exposure)
+    soft = tuple(a.softness_um) if len(a.softness_um) == 2 else (a.softness_um[0], a.softness_um[0])
+    out = render_image(
+        lum, prof, curve, negative=a.negative, film_width_mm=a.film_width_mm,
+        grain_scale=a.grain_scale, softness_um=soft, seed=a.seed,
+    )
+    save_image(a.output, out, bits=a.bits, encode_srgb=not a.negative)
+    h, w = lum.shape
+    print(f"{a.output}: {w}x{h}, profile {prof.name}, pitch {a.film_width_mm * 1000 / max(h, w):.2f} µm/px, "
+          f"σ_D reliable to D≈{prof.reliable_dmax:.1f}, {'negative transmittance' if a.negative else 'positive sRGB'} {a.bits}-bit")
 
 
 def main(argv=None):
@@ -141,7 +161,27 @@ def main(argv=None):
     s.add_argument("--scanner", default="Nikon Coolscan V ED (LS-50), VueScan RAW DNG")
     s.add_argument("--dpi", type=float, default=4000.0)
     s.add_argument("--min-width", type=int, default=3000)
+    s.add_argument("--software", help="only frames whose VueScan version string contains this (e.g. 9.8.46 = single-pass era)")
+    s.add_argument("--rolls", nargs="*", help="only rolls whose directory name contains one of these")
     s.set_defaults(fn=cmd_aggregate)
+
+    s = sub.add_parser("render", help="apply a measured grain profile to an image")
+    s.add_argument("input")
+    s.add_argument("output")
+    s.add_argument("--profile", required=True)
+    s.add_argument("--film-width-mm", type=float, default=36.0, help="film frame size mapped to the image's long side")
+    s.add_argument("--fog", type=float, default=0.10)
+    s.add_argument("--dmax", type=float, default=2.6)
+    s.add_argument("--gamma", type=float, default=0.80)
+    s.add_argument("--mid-density", type=float, default=0.90, help="negative density a mid-grey lands on")
+    s.add_argument("--exposure", type=float, default=0.0, help="stops of exposure offset applied to the scene")
+    s.add_argument("--grain-scale", type=float, default=1.0)
+    s.add_argument("--softness-um", type=float, nargs="+", default=[0.0], help="scan-softness Gaussian blur (µm), one value or y x")
+    s.add_argument("--negative", action="store_true", help="output the negative's linear transmittance instead of a positive")
+    s.add_argument("--linear-input", action="store_true")
+    s.add_argument("--seed", type=int)
+    s.add_argument("--bits", type=int, default=16, choices=(8, 16))
+    s.set_defaults(fn=cmd_render)
 
     a = ap.parse_args(argv)
     a.fn(a)

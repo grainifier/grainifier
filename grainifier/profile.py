@@ -32,8 +32,19 @@ def _mode_of_log(x: np.ndarray, nbins: int = 60) -> float:
     return float(np.exp(c[np.argmax(h)]))
 
 
-def aggregate(frames: list[dict], min_width: int = 3000, min_patches: int = 200) -> dict:
+def _frame_software(f: dict) -> str:
+    try:
+        return json.loads(str(f["meta"])).get("software", "") if "meta" in f else ""
+    except ValueError:
+        return ""
+
+
+def aggregate(frames: list[dict], min_width: int = 3000, min_patches: int = 200, software_contains: str | None = None, rolls_contain: list[str] | None = None) -> dict:
     frames = [f for f in frames if int(f["shape"][1]) >= min_width and int(f["shape"][0]) >= min_width]
+    if software_contains:
+        frames = [f for f in frames if software_contains in _frame_software(f)]
+    if rolls_contain:
+        frames = [f for f in frames if any(k in f["roll"] for k in rolls_contain)]
     if not frames:
         raise ValueError("no frames pass the size filter")
     bins = frames[0]["bins"]
