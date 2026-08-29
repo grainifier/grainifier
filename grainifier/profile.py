@@ -72,18 +72,21 @@ def aggregate(frames: list[dict], min_width: int = 3000, min_patches: int = 200)
             common = common[np.isfinite(common)]
             scanner = (var[m, 1] - cov[m, 0] * cov[m, 1] / crb)
             scanner = scanner[np.isfinite(scanner)]
+            if len(common) < min_patches:
+                common = scanner = np.array([np.nan])
             row.update(
                 sigma_d=float(np.sqrt(np.median(vg))),
                 sigma_d_p10=float(np.sqrt(np.quantile(vg, 0.10))),
                 sigma_d_p25=float(np.sqrt(np.quantile(vg, 0.25))),
                 sigma_d_mode=float(np.sqrt(_mode_of_log(vg))),
                 sigma_d_all_median=float(np.sqrt(np.median(var[m_all, 1]))),
-                sigma_grain_common=float(np.sqrt(max(np.median(common), 0.0))),
-                sigma_scanner_g=float(np.sqrt(max(np.median(scanner), 0.0))),
-                sigma_r=float(np.sqrt(np.median(var[m, 0]))),
-                sigma_b=float(np.sqrt(np.median(var[m, 2]))),
-                corr_rg=float(np.median(cov[m, 0] / np.sqrt(var[m, 0] * var[m, 1] + 1e-12))),
-                corr_gb=float(np.median(cov[m, 1] / np.sqrt(var[m, 1] * var[m, 2] + 1e-12))),
+                sigma_grain_common=float(np.sqrt(max(np.nanmedian(common), 0.0))),
+                sigma_scanner_g=float(np.sqrt(max(np.nanmedian(scanner), 0.0))),
+                n_rgb=int(np.isfinite(cov[m, 0]).sum()),
+                sigma_r=float(np.sqrt(np.nanmedian(var[m, 0]))),
+                sigma_b=float(np.sqrt(np.nanmedian(var[m, 2]))),
+                corr_rg=float(np.nanmedian(cov[m, 0] / np.sqrt(var[m, 0] * var[m, 1] + 1e-12))),
+                corr_gb=float(np.nanmedian(cov[m, 1] / np.sqrt(var[m, 1] * var[m, 2] + 1e-12))),
                 skew=float(np.median(skew[m])),
                 kurtosis=float(np.median(kurt[m])),
             )

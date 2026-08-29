@@ -63,16 +63,20 @@ def frame_stats(
     texture_factor: float = 1.5,
 ) -> dict:
     p = patch
-    d = density(img, white)  # (H, W, 3)
+    nc = 3 if img.shape[2] >= 3 else 1  # greyscale scans: no cross-channel split possible
+    d = density(img, white, channels=nc)  # (H, W, nc)
     h, w = d.shape[:2]
     nh, nw = h // p, w // p
-    # (N, 3, p*p) patches
+    # (N, 3, p*p) patches; a greyscale scan is replicated into the three slots so the
+    # rest of the code is unchanged, and the covariances are blanked out below
     patches = (
         d[: nh * p, : nw * p]
-        .reshape(nh, p, nw, p, 3)
+        .reshape(nh, p, nw, p, nc)
         .transpose(0, 2, 4, 1, 3)
-        .reshape(nh * nw, 3, p * p)
+        .reshape(nh * nw, nc, p * p)
     )
+    if nc == 1:
+        patches = np.repeat(patches, 3, axis=1)
     del d
     a, pinv = _plane_basis(p)
     coef = patches @ pinv.T  # (N, 3, 3)
@@ -89,6 +93,10 @@ def frame_stats(
         ],
         1,
     )
+    if nc == 1:
+        cov[:] = np.nan
+        var[:, 0] = np.nan
+        var[:, 2] = np.nan
     g = res[:, 1]
     sd = np.sqrt(var[:, 1]) + 1e-9
     skew = ((g / sd[:, None]) ** 3).mean(-1)
@@ -133,5 +141,6 @@ def frame_stats(
         var_sum=var_sum,
         density_hist=hist,
         shape=np.array([h, w, img.shape[2]]),
+        channels_used=nc,
         white=float(white),
     )
