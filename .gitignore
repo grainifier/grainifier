@@ -12,3 +12,8 @@ __pycache__/
 *.egg-info/
 .DS_Store
 data/frames/
+# full-size render outputs (keep only the small comparison crops)
+eval/render/*_35mm.png
+eval/render/*_halfframe.png
+eval/render/*_1to1.png
+eval/render/*_small.png

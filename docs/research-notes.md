@@ -88,3 +88,8 @@ Decisions
 - The 9.8.46 single-pass rolls (HP5: 1022, 1297, 8912; BWXX: 1023, 1024, 8910, 8911) are the reference for the emulsion NPS; 3-pass rolls can be used after dividing their NPS by the fitted |MTF_jitter|², or kept as a "softer scan" variant.
 - The renderer gets an explicit scan-softness (Gaussian σ in µm, anisotropic) parameter; the jitter above is simply one preset of it.
 - Re-scan check still worth doing once: same negative, 1 pass vs 3 passes, to confirm the MTF fit directly rather than across different rolls.
+
+## Renderer v0 (2026-08-29)
+`grainifier render` (`grainifier/render.py`): NPS kernel from the profile (mid-density bins, unit-normalised, zero-phase) ⊛ white noise, per-pixel skew via n + a(n²−1), amplitude σ_D(D), synthesised at 6.35 µm and box-averaged to the output pitch; logistic H&D placeholder curve (fog 0.1, Dmax 2.6, γ 0.8, mid-grey → D 0.9 for HP5@1600). Closed loop against the profile: σ within 1 %, skew within 0.01, lag-1 x 0.53 vs 0.53–0.58, lag-1 y 0.28 vs 0.29–0.34. Visual: rendered flat field vs the flattest real 1-pass BWXX patch at D≈1.2 match in scale and anisotropy; real has a little more low-frequency mottle (σ 0.130 vs 0.114, partly residual texture).
+
+Known gaps: H&D curve is a placeholder (needs the calibration roll); single NPS shape for all densities (profile has per-bin spectra — could interpolate); no spectral response/filters; skew transform slightly whitens the spectrum; grain beyond 4000 dpi is interpolated, not finer than the scan.
