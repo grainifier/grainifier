@@ -79,3 +79,12 @@ Pooled BWXX σ_D ≈ 0.082–0.095 for D 0.5–2.1 (≈ HP5@1600), scanner term 
 The later scans are blurrier (higher, more isotropic correlation, lower per-pixel σ), and σ·√(correlation area) — roughly the density fluctuation seen through a larger aperture — is constant per stock across the two eras to within about ±20 % (HP5: 0.18–0.19 for 9 of 13 rolls; 2037/2094 low at 0.13–0.14, 2095/2096 high at 0.22–0.23 — residual differences that may well be development). Cause is on the scanner side (focus / film flatness / a VueScan default such as fine mode or multi-sampling), to be identified by re-scanning one 2025 negative with the current setup. BWXX roll 1023 is the one genuine development outlier (σ√A 0.21 vs 0.14, and the highest base+fog). The aggregator now reports `corr_area_px2@1.0` and `sigma_sqrt_area@1.0` per roll.
 
 Consequences for the renderer: per-pixel σ_D is *not* a stock property — the NPS is. Store and render the full 2-D NPS; treat the scanner MTF as a separate, measurable factor (the sharp 9.8.46 sessions are the better reference for the emulsion itself), and expose "scan softness" as its own control rather than folding it into the grain amplitude.
+
+### Cause confirmed: VueScan multi-pass (3 passes) from autumn 2025
+The user switched from 1 to 3 passes (plus the raw+inv workflow) around then. Averaging passes cancels channel-independent CCD noise — which we already found negligible below D≈2.3 — but the LS-50 does not reposition to sub-pixel accuracy, so the average is a registration blur. Ratio of 3-pass to 1-pass HP5 spectra at D 0.8–1.3 (= |MTF_jitter|²): ≈1.0 at DC, 0.17 at Nyquist along y vs 0.72 along x. Separable-Gaussian fit: σ_x ≈ 0.42 px, σ_y ≈ 0.50 px (6.35 µm/px), i.e. a per-pass jitter of ≈0.6 px ≈ 4 µm along the transport axis.
+
+Decisions
+- **Profile and calibrate from single-pass scans.** Multi-pass only pays above D≈2.3 and costs grain resolution everywhere.
+- The 9.8.46 single-pass rolls (HP5: 1022, 1297, 8912; BWXX: 1023, 1024, 8910, 8911) are the reference for the emulsion NPS; 3-pass rolls can be used after dividing their NPS by the fitted |MTF_jitter|², or kept as a "softer scan" variant.
+- The renderer gets an explicit scan-softness (Gaussian σ in µm, anisotropic) parameter; the jitter above is simply one preset of it.
+- Re-scan check still worth doing once: same negative, 1 pass vs 3 passes, to confirm the MTF fit directly rather than across different rolls.
