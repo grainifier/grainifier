@@ -63,3 +63,19 @@ Findings
 - Density histogram of the whole HP5@1600 archive peaks at D 0.1–0.4 (thin, shadow-heavy negatives — pushed film) with a long tail to 2.5.
 
 Next: renderer (`grainifier render`) driven by this JSON; BWXX / Tri-X / FP4+ profiles with the same tool (`data/*-rolls.txt`); re-scan experiment to validate the scanner split.
+
+## Results — BWXX (Kodak Double-X 5222) profiles and the scan-sharpness finding (2026-08-29)
+
+`profiles/bwxx.json`: 197 frames, 6 rolls (normal dev). `profiles/bwxx-push2.json`: 37 frames, 1 roll (+2).
+Pooled BWXX σ_D ≈ 0.082–0.095 for D 0.5–2.1 (≈ HP5@1600), scanner term small (0.01) up to D 2, noise floor from D≈2.5. Push-2 roll: 0.10–0.115, skew −0.29 at D 2 — grainier, as expected.
+
+**Per-roll spread is mostly scan sharpness, not development.** Per-roll autocorrelation at D≈1:
+
+| scanned with | rolls | lag-1 y | corr. area px² | σ_D/px @1.0 | σ·√A |
+|---|---|---|---|---|---|
+| VueScan 9.8.46 (spring–summer 2025) | HP5 1022, 1297, 8912; BWXX 1023, 1024, 8910, 8911 | 0.26–0.35 | 1.9–2.8 | 0.087–0.135 | HP5 0.18–0.22, BWXX 0.14–0.15 (1023: 0.21) |
+| VueScan 9.8.49–9.8.56 (autumn 2025 →) | all later rolls | 0.41–0.63 | 3.5–7.6 | 0.057–0.099 | HP5 0.18–0.22, BWXX 0.135–0.14 |
+
+The later scans are blurrier (higher, more isotropic correlation, lower per-pixel σ), and σ·√(correlation area) — roughly the density fluctuation seen through a larger aperture — is constant per stock across the two eras to within about ±20 % (HP5: 0.18–0.19 for 9 of 13 rolls; 2037/2094 low at 0.13–0.14, 2095/2096 high at 0.22–0.23 — residual differences that may well be development). Cause is on the scanner side (focus / film flatness / a VueScan default such as fine mode or multi-sampling), to be identified by re-scanning one 2025 negative with the current setup. BWXX roll 1023 is the one genuine development outlier (σ√A 0.21 vs 0.14, and the highest base+fog). The aggregator now reports `corr_area_px2@1.0` and `sigma_sqrt_area@1.0` per roll.
+
+Consequences for the renderer: per-pixel σ_D is *not* a stock property — the NPS is. Store and render the full 2-D NPS; treat the scanner MTF as a separate, measurable factor (the sharp 9.8.46 sessions are the better reference for the emulsion itself), and expose "scan softness" as its own control rather than folding it into the grain amplitude.

@@ -116,6 +116,30 @@ def aggregate(frames: list[dict], min_width: int = 3000, min_patches: int = 200)
             per_roll[r][f"sigma_d@{dref}"] = float(np.sqrt(np.median(var[m, 1]))) if m.sum() >= 50 else None
             per_roll[r][f"n@{dref}"] = int(m.sum())
         per_roll[r]["frames"] = int(sum(1 for f in frames if f["roll"] == r))
+        # scan-sharpness diagnostics from the roll's own spectra around D≈1.0 (bins 0.9–1.2):
+        # correlation area and the aperture-scaled granularity, which is (nearly) invariant to
+        # scanner blur while the per-pixel sigma is not.
+        b1 = int(np.digitize(1.0, bins) - 1)
+        rs = sum(f["spec_sum"][b1 - 1 : b1 + 2].sum(0) for f in frames if f["roll"] == r)
+        rn = sum(int(f["spec_n"][b1 - 1 : b1 + 2].sum()) for f in frames if f["roll"] == r)
+        if rn >= 50:
+            ac = np.fft.fftshift(np.fft.irfft2(rs / rn, s=(p, p)))
+            ac /= ac.max()
+            c = p // 2
+            area = float(ac[c - 6 : c + 7, c - 6 : c + 7].sum())
+            per_roll[r]["autocorr_lag1_xy@1.0"] = [float(ac[c, c + 1]), float(ac[c + 1, c])]
+            per_roll[r]["corr_area_px2@1.0"] = area
+            sig = per_roll[r]["sigma_d@1.0"]
+            per_roll[r]["sigma_sqrt_area@1.0"] = float(sig * np.sqrt(max(area, 0))) if sig else None
+        sw = set()
+        for f in frames:
+            if f["roll"] == r and "meta" in f:
+                try:
+                    sw.add(json.loads(str(f["meta"])).get("software", "?"))
+                except ValueError:
+                    pass
+        sw = sorted(sw)
+        per_roll[r]["scan_software"] = sw
 
     hist = sum(f["density_hist"] for f in frames)
     return dict(

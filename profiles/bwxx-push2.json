@@ -1,8 +1,8 @@
 {
  "name": "bwxx-push2",
- "stock": "Kodak Double-X 5222",
- "exposure_index": "1000",
- "developer": "lab, push +2",
+ "stock": "Kodak_Double-X_5222",
+ "exposure_index": "",
+ "developer": "",
  "scanner": "Nikon Coolscan V ED (LS-50), VueScan RAW DNG",
  "dpi": 4000.0,
  "pixel_pitch_um": 6.35,
@@ -1396,7 +1396,16 @@
    "n@1.5": 1975,
    "sigma_d@2.0": 0.11547988653182983,
    "n@2.0": 3078,
-   "frames": 37
+   "frames": 37,
+   "autocorr_lag1_xy@1.0": [
+    0.6101256192982196,
+    0.44163743048749315
+   ],
+   "corr_area_px2@1.0": 3.3617733376560905,
+   "sigma_sqrt_area@1.0": 0.1828430659801027,
+   "scan_software": [
+    "VueScan 9 a64 (9.8.55)"
+   ]
   }
  },
  "density_histogram": {

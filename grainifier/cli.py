@@ -104,6 +104,11 @@ def cmd_aggregate(a):
             ax = r.get("autocorr_x", [0, 0])[1]
             ay = r.get("autocorr_y", [0, 0])[1]
             print(f"{r['d_mid']:5.2f} {r['n_sel']:7d} {r['sigma_d']:7.4f} {r['sigma_d_mode']:7.4f} {r['sigma_d_p10']:7.4f} {r['sigma_grain_common']:7.4f} {r['sigma_scanner_g']:7.4f} {ax:6.3f} {ay:6.3f} {r['skew']:6.2f} {r['kurtosis']:6.2f}")
+    print()
+    print(f"{'roll':44s} {'frames':>6s} {'σ@1.0':>7s} {'ac1 x/y':>9s} {'area':>5s} {'σ√A':>6s}  scan sw")
+    for r, v in prof["per_roll"].items():
+        ac = v.get("autocorr_lag1_xy@1.0", [0, 0])
+        print(f"{r[:44]:44s} {v['frames']:6d} {v['sigma_d@1.0'] or 0:7.4f} {ac[0]:4.2f}/{ac[1]:4.2f} {v.get('corr_area_px2@1.0', 0):5.2f} {v.get('sigma_sqrt_area@1.0') or 0:6.3f}  {','.join(v.get('scan_software', []))}")
     if a.plots:
         for f in plot_profile(prof, Path(a.plots), title=meta["name"]):
             print("plot:", f)

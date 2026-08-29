@@ -1,8 +1,8 @@
 {
  "name": "bwxx",
- "stock": "Kodak Double-X 5222",
- "exposure_index": "250",
- "developer": "lab, normal",
+ "stock": "Kodak_Double-X_5222",
+ "exposure_index": "",
+ "developer": "",
  "scanner": "Nikon Coolscan V ED (LS-50), VueScan RAW DNG",
  "dpi": 4000.0,
  "pixel_pitch_um": 6.35,
@@ -1418,7 +1418,16 @@
    "n@1.5": 10860,
    "sigma_d@2.0": 0.16036827862262726,
    "n@2.0": 14107,
-   "frames": 41
+   "frames": 41,
+   "autocorr_lag1_xy@1.0": [
+    0.5712224398362024,
+    0.33121455286612766
+   ],
+   "corr_area_px2@1.0": 2.5215991758521157,
+   "sigma_sqrt_area@1.0": 0.21454332234619392,
+   "scan_software": [
+    "VueScan 9 a64 (9.8.46)"
+   ]
   },
   "1024 - BWXX spring summer": {
    "sigma_d@0.6": 0.10167344659566879,
@@ -1429,7 +1438,16 @@
    "n@1.5": 1186,
    "sigma_d@2.0": null,
    "n@2.0": 6,
-   "frames": 10
+   "frames": 10,
+   "autocorr_lag1_xy@1.0": [
+    0.5511253836415723,
+    0.28371006120136794
+   ],
+   "corr_area_px2@1.0": 1.8463686268850437,
+   "sigma_sqrt_area@1.0": 0.14807323172044265,
+   "scan_software": [
+    "VueScan 9 a64 (9.8.46)"
+   ]
   },
   "2546 - Spring BWXX": {
    "sigma_d@0.6": 0.050816815346479416,
@@ -1440,7 +1458,16 @@
    "n@1.5": 6774,
    "sigma_d@2.0": 0.0668557733297348,
    "n@2.0": 9888,
-   "frames": 37
+   "frames": 37,
+   "autocorr_lag1_xy@1.0": [
+    0.6354031153227971,
+    0.5621953103266314
+   ],
+   "corr_area_px2@1.0": 6.183999238974691,
+   "sigma_sqrt_area@1.0": 0.14191568004519484,
+   "scan_software": [
+    "VueScan 9 a64 (9.8.55)"
+   ]
   },
   "2548 - Spring - BWXX": {
    "sigma_d@0.6": 0.050489719957113266,
@@ -1451,7 +1478,16 @@
    "n@1.5": 7890,
    "sigma_d@2.0": 0.06185511499643326,
    "n@2.0": 12422,
-   "frames": 36
+   "frames": 36,
+   "autocorr_lag1_xy@1.0": [
+    0.635646784790405,
+    0.5631015644366539
+   ],
+   "corr_area_px2@1.0": 5.209987094055192,
+   "sigma_sqrt_area@1.0": 0.13500666379718362,
+   "scan_software": [
+    "VueScan 9 a64 (9.8.56)"
+   ]
   },
   "8910 - BWXX spring summer": {
    "sigma_d@0.6": 0.08537022024393082,
@@ -1462,7 +1498,16 @@
    "n@1.5": 4656,
    "sigma_d@2.0": 0.10214917361736298,
    "n@2.0": 8709,
-   "frames": 36
+   "frames": 36,
+   "autocorr_lag1_xy@1.0": [
+    0.543604038487914,
+    0.260377977107292
+   ],
+   "corr_area_px2@1.0": 2.2403871126493766,
+   "sigma_sqrt_area@1.0": 0.14100895101214297,
+   "scan_software": [
+    "VueScan 9 a64 (9.8.46)"
+   ]
   },
   "8911 BWXX 2025-05": {
    "sigma_d@0.6": 0.08029916137456894,
@@ -1473,7 +1518,16 @@
    "n@1.5": 3419,
    "sigma_d@2.0": 0.10409023612737656,
    "n@2.0": 10193,
-   "frames": 37
+   "frames": 37,
+   "autocorr_lag1_xy@1.0": [
+    0.5715656749892394,
+    0.330280662913401
+   ],
+   "corr_area_px2@1.0": 2.8177586494073656,
+   "sigma_sqrt_area@1.0": 0.14631725421515632,
+   "scan_software": [
+    "VueScan 9 a64 (9.8.46)"
+   ]
   }
  },
  "density_histogram": {
