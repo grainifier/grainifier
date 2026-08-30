@@ -97,8 +97,33 @@ def skew_coeff(target_skew: np.ndarray) -> np.ndarray:
     return np.interp(np.clip(target_skew, _SKEW_S[0], _SKEW_S[-1]), _SKEW_S, _SKEW_A).astype(np.float32)
 
 
+BUNDLED_DIR = Path(__file__).parent / "profiles"
+
+
+def list_bundled_profiles() -> list[dict]:
+    out = []
+    for f in sorted(BUNDLED_DIR.glob("*.json")):
+        p = json.loads(f.read_text())
+        out.append(dict(name=f.stem, stock=p.get("stock", ""), ei=p.get("exposure_index", ""),
+                        developer=p.get("developer", ""), frames=p.get("n_frames"), scanner=p.get("scanner", "")))
+    return out
+
+
+def resolve_profile(name_or_path: str | Path) -> Path:
+    """A path to a JSON file, or the name of a bundled profile (with or without .json)."""
+    q = Path(name_or_path)
+    if q.exists():
+        return q
+    cand = BUNDLED_DIR / (q.name if q.suffix == ".json" else q.name + ".json")
+    if cand.exists():
+        return cand
+    names = ", ".join(f.stem for f in sorted(BUNDLED_DIR.glob("*.json")))
+    raise FileNotFoundError(f"no profile {name_or_path!r}; bundled: {names}")
+
+
 class GrainProfile:
     def __init__(self, path: str | Path, kernel_density_range=(0.7, 1.7), min_channel_corr=0.9):
+        path = resolve_profile(path)
         p = json.loads(Path(path).read_text())
         self.name = p.get("name", Path(path).stem)
         self.pitch_um = float(p.get("pixel_pitch_um", REF_PITCH_UM))

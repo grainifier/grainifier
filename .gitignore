@@ -17,3 +17,4 @@ eval/render/*_35mm.png
 eval/render/*_halfframe.png
 eval/render/*_1to1.png
 eval/render/*_small.png
+dist/

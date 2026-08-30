@@ -9,7 +9,7 @@ description = "Measure real film grain from scans and apply it to digital images
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
-dependencies = ["numpy>=1.24"]
+dependencies = ["numpy>=1.24", "pillow>=9"]
 
 [project.optional-dependencies]
 plots = ["matplotlib"]
@@ -19,3 +19,6 @@ grainifier = "grainifier.cli:main"
 
 [tool.setuptools]
 packages = ["grainifier"]
+
+[tool.setuptools.package-data]
+grainifier = ["profiles/*.json"]

@@ -5,7 +5,8 @@
                                                 stream every DNG in the listed remote
                                                 directories over ssh, cache per-frame npz
     grainifier aggregate data/frames/NAME -o profiles/NAME.json [--plots DIR]
-    grainifier render IN.png OUT.png --profile profiles/NAME.json [--film-width-mm 36 ...]
+    grainifier profiles                         list bundled profiles
+    grainifier render IN.png OUT.png --profile NAME|profile.json [--film-width-mm 36 ...]
 """
 from __future__ import annotations
 
@@ -115,6 +116,13 @@ def cmd_aggregate(a):
             print("plot:", f)
 
 
+def cmd_profiles(a):
+    from .render import list_bundled_profiles
+
+    for p in list_bundled_profiles():
+        print(f"{p['name']:28s} {p['stock']:22s} EI {str(p['ei']):5s} {p['developer']:24s} {p['frames']:4d} frames  {p['scanner']}")
+
+
 def cmd_render(a):
     from .render import Curve, GrainProfile, load_image_linear, render_image, save_image
 
@@ -165,10 +173,13 @@ def main(argv=None):
     s.add_argument("--rolls", nargs="*", help="only rolls whose directory name contains one of these")
     s.set_defaults(fn=cmd_aggregate)
 
+    s = sub.add_parser("profiles", help="list the profiles bundled with the package")
+    s.set_defaults(fn=cmd_profiles)
+
     s = sub.add_parser("render", help="apply a measured grain profile to an image")
     s.add_argument("input")
     s.add_argument("output")
-    s.add_argument("--profile", required=True)
+    s.add_argument("--profile", required=True, help="bundled profile name (see `grainifier profiles`) or path to a profile JSON")
     s.add_argument("--film-width-mm", type=float, default=36.0, help="film frame size mapped to the image's long side")
     s.add_argument("--fog", type=float, default=0.10)
     s.add_argument("--dmax", type=float, default=2.6)

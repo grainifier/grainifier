@@ -1,0 +1,17 @@
+{
+  "title": "grainifier: real film grain measured from scans, applied to digital images",
+  "upload_type": "software",
+  "description": "Open-source tool that measures film grain statistics (amplitude versus negative density, 2-D noise power spectrum, skewness) from linear scans of black-and-white negatives and renders that measured grain onto digital images in negative-density space. Includes profiles for Ilford HP5 Plus at EI 1600 and Kodak Double-X 5222 measured on a Nikon Coolscan V ED.",
+  "creators": [
+    {"name": "Fyhr, Pontus"}
+  ],
+  "license": "MIT",
+  "access_right": "open",
+  "keywords": ["film grain", "photographic emulsion", "noise power spectrum", "image processing", "analog photography", "film simulation"],
+  "related_identifiers": [
+    {"identifier": "10.1111/cgf.13159", "relation": "cites", "resource_type": "publication-article", "scheme": "doi"},
+    {"identifier": "10.5201/ipol.2017.192", "relation": "cites", "resource_type": "publication-article", "scheme": "doi"},
+    {"identifier": "10.1145/3592127", "relation": "cites", "resource_type": "publication-article", "scheme": "doi"},
+    {"identifier": "10.1111/cgf.70076", "relation": "cites", "resource_type": "publication-article", "scheme": "doi"}
+  ]
+}

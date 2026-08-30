@@ -1,8 +1,8 @@
 {
  "name": "bwxx",
- "stock": "Kodak_Double-X_5222",
- "exposure_index": "",
- "developer": "",
+ "stock": "Kodak Double-X 5222",
+ "exposure_index": "250",
+ "developer": "lab, normal (mixed 1- and 3-pass scans)",
  "scanner": "Nikon Coolscan V ED (LS-50), VueScan RAW DNG",
  "dpi": 4000.0,
  "pixel_pitch_um": 6.35,

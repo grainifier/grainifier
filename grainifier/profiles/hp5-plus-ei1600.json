@@ -1,8 +1,8 @@
 {
  "name": "hp5-plus-ei1600",
- "stock": "Ilford_HP5_Plus",
+ "stock": "Ilford HP5 Plus",
  "exposure_index": "1600",
- "developer": "",
+ "developer": "lab, push +2 (mixed 1- and 3-pass scans)",
  "scanner": "Nikon Coolscan V ED (LS-50), VueScan RAW DNG",
  "dpi": 4000.0,
  "pixel_pitch_um": 6.35,
