@@ -63,6 +63,8 @@ def frame_stats(
     texture_factor: float = 1.5,
 ) -> dict:
     p = patch
+    if img.ndim == 2:
+        img = img[..., None]
     nc = 3 if img.shape[2] >= 3 else 1  # greyscale scans: no cross-channel split possible
     d = density(img, white, channels=nc)  # (H, W, nc)
     h, w = d.shape[:2]
