@@ -39,3 +39,32 @@ def test_profiles_and_render_by_name(tmp_path, capsys):
     main(["render", str(img), str(tmp_path / "o.png"), "--profile", "bwxx-1pass", "--bits", "8", "--seed", "2"])
     o = np.asarray(Image.open(tmp_path / "o.png"))
     assert o.dtype == np.uint8 and o.shape == (64, 96)
+
+
+def test_scancurve_recovers_known_curve(tmp_path, rng, capsys):
+    """A synthetic raw DNG and a positive made with a known ScanCurve → the fit recovers it."""
+    from grainifier.render import ScanCurve, linear_to_srgb
+
+    sc = ScanCurve(black_point=0.08, white_point=2.4, gamma=1.6)
+    for i, frame in enumerate((3, 12)):
+        # a smooth scene covering the density range, plus grain
+        yy, xx = np.mgrid[0:600, 0:900] / 600.0
+        d = (0.2 + 2.0 * (0.5 + 0.5 * np.sin(3 * xx) * np.cos(2 * yy))).astype(np.float32)
+        d = d + 0.06 * correlated_noise(d.shape, rng)
+        raw = write_dng(tmp_path / f"raw7777-{frame:04d}.dng", density_to_uint16(d))
+        pos = tmp_path / f"inv7777-{frame:04d}.png"
+        Image.fromarray((linear_to_srgb(sc.positive(d)) * 255 + 0.5).astype(np.uint8)).save(pos)
+    out = tmp_path / "preset.json"
+    main(["scancurve", str(tmp_path / "raw7777-0003.dng"), str(tmp_path / "raw7777-0012.dng"),
+          str(tmp_path / "inv7777-0003.png"), str(tmp_path / "inv7777-0012.png"), "--write", str(out)])
+    text = capsys.readouterr().out
+    assert "7777-3" in text and "7777-12" in text and "wrote" in text
+    doc = json.loads(out.read_text())
+    assert abs(doc["black_point"] - 0.08) < 0.06
+    assert abs(doc["white_point"] - 2.4) < 0.15
+    assert abs(doc["gamma"] - 1.6) / 1.6 < 0.1
+    # the written preset is accepted by render
+    img = tmp_path / "in.jpg"
+    Image.fromarray(np.full((48, 64, 3), 100, np.uint8)).save(img)
+    main(["render", str(img), str(tmp_path / "o.png"), "--profile", "bwxx-1pass", "--scan-preset", str(out), "--bits", "8", "--seed", "1"])
+    assert (tmp_path / "o.png").exists()

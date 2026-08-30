@@ -6,6 +6,8 @@
                                                 directories over ssh, cache per-frame npz
     grainifier aggregate data/frames/NAME -o profiles/NAME.json [--plots DIR]
     grainifier profiles                         list bundled profiles
+    grainifier scancurve raw*.dng inv*.jpg --write mine.json
+                                                measure your workflow's negative→positive curve
     grainifier render IN.png OUT.png --profile NAME|profile.json [--film-width-mm 36 ...]
 """
 from __future__ import annotations
@@ -123,12 +125,47 @@ def cmd_profiles(a):
         print(f"{p['name']:28s} {p['stock']:22s} EI {str(p['ei']):5s} {p['developer']:24s} {p['frames']:4d} frames  {p['scanner']}")
 
 
+def cmd_scancurve(a):
+    from .scancurve import fit_pair, pair_files, summarize, write_preset
+
+    pairs = pair_files(a.files)
+    if not pairs:
+        sys.exit("no raw/positive pairs found — name files with matching roll-frame numbers (raw2545-0007.dng + inv2545-0007.jpg) or pass raw.dng=positive.jpg")
+    fits = []
+    print(f"{'frame':10s} {'black':>6s} {'white':>6s} {'gamma':>6s} {'rms':>6s}  P'(D) at D=0.5 1.0 1.5 2.0   D p1/p50/p99")
+    for raw, pos in pairs:
+        try:
+            f = fit_pair(raw, pos)
+        except Exception as e:  # noqa: BLE001
+            print(f"{raw}: {type(e).__name__}: {e}")
+            continue
+        fits.append(f)
+        sl = "  ".join(f"{x:4.2f}" if np.isfinite(x) else "  - " for x in f.slopes)
+        print(f"{f.key:10s} {f.black_point:6.2f} {f.white_point:6.2f} {f.gamma:6.2f} {f.rms:6.3f}  {sl}   {f.density_pct[0]:.2f}/{f.density_pct[1]:.2f}/{f.density_pct[2]:.2f}")
+    if not fits:
+        sys.exit("no pair could be fitted")
+    summ = summarize(fits)
+    print(f"\nmedian of {summ['n_pairs']} pairs: black point {summ['black_point']:.2f}, white point {summ['white_point']:.2f}, gamma {summ['gamma']:.2f}; "
+          f"slopes {summ['slope_median']}")
+    if a.write:
+        write_preset(summ, Path(a.write), a.name or Path(a.write).stem)
+        print(f"wrote {a.write} — use it with: grainifier render ... --scan-preset {a.write}")
+
+
 def cmd_render(a):
     from .render import Curve, GrainProfile, ScanCurve, load_image_linear, render_image, save_image
 
     prof = GrainProfile(a.profile)
     curve = Curve(fog=a.fog, dmax=a.dmax, gamma=a.gamma, mid_density=a.mid_density)
-    scan = ScanCurve.preset(a.scan_preset, black_point=a.black_point, white_point=a.white_point, gamma=a.print_gamma if a.print_gamma > 0 else None)
+    if a.scan_preset in ScanCurve.PRESETS:
+        scan = ScanCurve.preset(a.scan_preset, black_point=a.black_point, white_point=a.white_point, gamma=a.print_gamma if a.print_gamma > 0 else None)
+    else:
+        from .scancurve import load_preset
+
+        scan = load_preset(a.scan_preset)
+        scan = ScanCurve(black_point=a.black_point if a.black_point is not None else scan.black_point,
+                         white_point=a.white_point if a.white_point is not None else scan.white_point,
+                         gamma=a.print_gamma if a.print_gamma > 0 else scan.gamma)
     lum = load_image_linear(a.input, assume_linear=a.linear_input)
     if a.exposure:
         lum = lum * (2.0 ** a.exposure)
@@ -177,6 +214,12 @@ def main(argv=None):
     s = sub.add_parser("profiles", help="list the profiles bundled with the package")
     s.set_defaults(fn=cmd_profiles)
 
+    s = sub.add_parser("scancurve", help="measure your scanning workflow's negative→positive curve from raw DNG + delivered positive pairs")
+    s.add_argument("files", nargs="+", help="raw DNGs and positives (paired by roll-frame numbers in the names), or explicit raw.dng=positive.jpg items")
+    s.add_argument("--write", help="write a scan-curve preset JSON for `render --scan-preset`")
+    s.add_argument("--name")
+    s.set_defaults(fn=cmd_scancurve)
+
     s = sub.add_parser("render", help="apply a measured grain profile to an image")
     s.add_argument("input")
     s.add_argument("output")
@@ -189,7 +232,7 @@ def main(argv=None):
     s.add_argument("--mid-density", type=float, default=0.90, help="negative density a mid-grey lands on")
     s.add_argument("--exposure", type=float, default=0.0, help="stops of exposure offset applied to the scene")
     s.add_argument("--grain-scale", type=float, default=1.0)
-    s.add_argument("--scan-preset", choices=("vuescan", "nlp"), default="vuescan", help="measured negative→positive curve: vuescan (VueScan inversion, γ≈1.45, default) or nlp (Lightroom/Negative Lab Pro look, ≈1.5–2× steeper, grainier positive)")
+    s.add_argument("--scan-preset", default="vuescan", help="measured negative→positive curve: vuescan (VueScan inversion, γ≈1.45, default), nlp (Lightroom/Negative Lab Pro look, ≈1.5–2× steeper, grainier positive), or a JSON written by `grainifier scancurve --write`")
     s.add_argument("--print-gamma", type=float, default=0.0, help="override the preset's gamma (density stretched between black and white point, then gamma); higher = contrastier, grainier positive")
     s.add_argument("--black-point", type=float, help="override the preset's black point (negative density that maps to black)")
     s.add_argument("--white-point", type=float, help="override the preset's white point")

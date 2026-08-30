@@ -2,6 +2,32 @@
 
 Real film grain, measured from real scans, applied to digital images. Open source (MIT).
 
+## Quick start
+
+```bash
+pip install git+https://github.com/grainifier/grainifier      # Python 3.10+, pulls numpy + pillow
+grainifier render photo.jpg photo_hp5.png --profile hp5-plus-ei1600-1pass
+```
+
+That's it: `photo_hp5.png` is your image (any JPEG/PNG/TIFF, colour or grey) rendered as if it
+had been shot on Ilford HP5+ pushed to 1600 and scanned at 4000 dpi. Use full-resolution
+files — the grain has a physical size, so a 24-MP image gets 35 mm grain and a small web
+image gets almost none. `grainifier profiles` lists the other stocks (`bwxx-1pass` = Kodak
+Double-X). The most useful knobs:
+
+```bash
+--film-width-mm 24        # half-frame (coarser grain); 56 for 6×6 (finer)
+--scan-preset nlp         # the punchier Lightroom / Negative Lab Pro look (grainier positive)
+--grain-scale 1.5         # more (or less) than measured
+--softness-um 3.2 2.7     # softer grain, like a 3-pass Coolscan scan
+--seed 1 --bits 8         # reproducible / smaller output
+```
+
+Want a profile of *your* film and scanner? See *Profiling your own scans* below — a few
+hundred ordinary frames as linear 16-bit scans are enough.
+
+## Why
+
 Most "film grain" tools either overlay a scanned grain texture (which ignores that grain
 *is* the image) or synthesise a procedural pattern with hand-tuned parameters. grainifier
 instead **measures** how a specific stock/developer/scanner combination actually behaves —
@@ -20,12 +46,12 @@ digital image → place each tone at its negative density D (scan curve; or film
              → add grain with measured σ_D(D), skew(D) and NPS(D) → back to the positive → output
 ```
 
-## Install
+## Install for development
 
 ```
 git clone https://github.com/grainifier/grainifier && cd grainifier
-pip install -e .          # numpy + pillow; add [plots] for matplotlib
-grainifier profiles       # lists the profiles bundled with the package
+pip install -e .[plots,dev]     # matplotlib for profile plots, pytest
+pytest
 ```
 
 ## Usage: rendering
@@ -66,6 +92,22 @@ profiler reproduce σ_D within 1 %, skewness within 0.01 and the autocorrelation
 per cent (`eval/render/`). Against a real HP5@1600 scan, a rendered digital photo at the same
 pixel pitch shows grain within 10–25 % at every tone from deep shadow to highlight
 (`docs/research-notes.md`).
+
+## Usage: measuring your own scan curve
+
+The renderer needs to know how *your* workflow turns negative density into a positive (that
+sets both where each tone sits on the negative and how strongly grain shows). Two measured
+presets ship (`vuescan`, `nlp`). To measure yours, give it a few raw scans and the positives
+your software delivered for the same frames — paired automatically by the roll/frame numbers
+in the file names, no registration needed even if the positive is cropped or resized:
+
+```
+grainifier scancurve raw2545-*.dng inv2545-*.jpg --write mine.json
+grainifier render photo.jpg out.png --profile hp5-plus-ei1600-1pass --scan-preset mine.json
+```
+
+It prints black point, white point and γ per pair plus the slope P′(D) at a few densities,
+and writes the median as a preset. Five to ten frames with a decent tonal range are plenty.
 
 ## Usage: profiling your own scans
 
