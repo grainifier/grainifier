@@ -4,6 +4,7 @@
     python tools/zenodo_upload.py dist/grainifier-frame-stats-2026.08.tar.gz \
         --metadata dist/grainifier-frame-stats-2026.08.zenodo.json [--sandbox] [--publish]
     python tools/zenodo_upload.py ... --new-version <existing record id>   # later versions
+    python tools/zenodo_upload.py ... --deposition <draft id> --publish     # publish a reviewed draft
 
 The token is read from $ZENODO_TOKEN or from ~/.config/zenodo/token (sandbox:
 $ZENODO_SANDBOX_TOKEN or ~/.config/zenodo/sandbox-token). Create one at
@@ -17,10 +18,24 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import ssl
 import sys
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+
+
+def _ssl_context() -> ssl.SSLContext | None:
+    """python.org builds on macOS ship without a CA bundle; use certifi's when available."""
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        return None
+
+
+_CTX = _ssl_context()
 
 
 def token_for(sandbox: bool) -> str:
@@ -38,7 +53,7 @@ def api(base: str, token: str, method: str, path: str, body=None, raw: bytes | N
     data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
     req = Request(url, data=data, method=method, headers={"Authorization": f"Bearer {token}", "Content-Type": content_type})
     try:
-        with urlopen(req) as r:
+        with urlopen(req, context=_CTX) as r:
             txt = r.read().decode()
             return json.loads(txt) if txt else {}
     except HTTPError as e:
@@ -52,6 +67,7 @@ def main():
     ap.add_argument("--sandbox", action="store_true")
     ap.add_argument("--publish", action="store_true")
     ap.add_argument("--new-version", metavar="RECORD_ID", help="create a new version of an existing published record")
+    ap.add_argument("--deposition", metavar="DEPOSITION_ID", help="act on an existing draft (re-set metadata, optionally --publish) instead of creating and uploading")
     a = ap.parse_args()
 
     base = "https://sandbox.zenodo.org/api" if a.sandbox else "https://zenodo.org/api"
@@ -61,6 +77,15 @@ def main():
     meta.setdefault("upload_type", "dataset")
     meta.setdefault("access_right", "open")
 
+    if a.deposition:
+        dep_id = int(a.deposition)
+        api(base, tok, "PUT", f"/deposit/depositions/{dep_id}", body={"metadata": meta})
+        dep = api(base, tok, "GET", f"/deposit/depositions/{dep_id}")
+        print(f"deposition {dep_id}: {dep['links']['html']}  files: {[f['filename'] for f in dep.get('files', [])]}")
+        if a.publish:
+            dep = api(base, tok, "POST", f"/deposit/depositions/{dep_id}/actions/publish")
+            print(f"published: {dep['links']['record_html']}  DOI {dep['doi']}  concept DOI {dep.get('conceptdoi')}")
+        return
     if a.new_version:
         dep = api(base, tok, "POST", f"/deposit/depositions/{a.new_version}/actions/newversion")
         dep = api(base, tok, "GET", dep["links"]["latest_draft"])
