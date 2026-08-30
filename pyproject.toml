@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "grainifier"
-version = "0.0.1"
+version = "0.1.0"
 description = "Measure real film grain from scans and apply it to digital images"
 readme = "README.md"
 license = {text = "MIT"}
