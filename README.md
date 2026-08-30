@@ -16,8 +16,8 @@ stocks only; colour negative is a later project.
 ## Pipeline
 
 ```
-digital image → linear scene → stock characteristic curve (incl. push) → negative density D
-             → add grain with measured σ_D(D), skew(D) and NPS(D) → invert → output
+digital image → place each tone at its negative density D (scan curve; or film curve for scene-linear input)
+             → add grain with measured σ_D(D), skew(D) and NPS(D) → back to the positive → output
 ```
 
 ## Install
@@ -38,8 +38,10 @@ grainifier render photo.jpg out.png --profile hp5-plus-ei1600-1pass
 |---|---|---|
 | `--profile` | — | bundled profile name (`grainifier profiles`) or path to a profile JSON |
 | `--film-width-mm` | 36 | film frame width mapped onto the image's long side (36 = 35 mm full frame, 17 = half-frame, 56 = 6×6). This sets the physical grain size. |
-| `--fog --dmax --gamma --mid-density` | 0.1 / 2.6 / 0.8 / 0.9 | placeholder logistic H&D curve: base+fog, shoulder density, slope, and the negative density a mid-grey scene value lands on |
-| `--exposure` | 0 | stops of exposure offset before the curve (under-expose → thinner, grainier-looking negative) |
+| `--tone` | positive | `positive`: the input is a finished image; its tones are placed on the negative through the inverse scan curve (black point, white point, gamma). `scene`: the input is scene-linear (from a RAW); the film H&D curve and `--exposure` decide the density |
+| `--print-gamma --black-point --white-point` | 1.25 / =fog / 2.5 | the scan curve: positive = ((D − D_bp)/(D_wp − D_bp))^γ. Measured on a VueScan/Negative Lab Pro workflow; higher γ = contrastier print |
+| `--fog --dmax --gamma --mid-density` | 0.1 / 2.6 / 0.8 / 0.9 | placeholder logistic H&D curve, used with `--tone scene` |
+| `--exposure` | 0 | stops of exposure offset (`--tone scene`) |
 | `--grain-scale` | 1 | multiplier on σ_D (artistic control; 1 = as measured) |
 | `--softness-um` | 0 | anisotropic Gaussian blur of the grain in µm (`0.5`, or `y x`); a 3-pass Coolscan scan ≈ `3.2 2.7` |
 | `--negative` | off | write the negative's linear transmittance (16-bit) instead of a positive, for 100 % comparison with real scans |
@@ -49,15 +51,20 @@ grainifier render photo.jpg out.png --profile hp5-plus-ei1600-1pass
 Input: PNG/JPEG/TIFF, 8- or 16-bit, colour or grey (colour is reduced to luminance — it is
 a B&W film). Output: greyscale PNG/TIFF. A 24-MP image takes a few seconds (numpy FFT).
 
-How it works: the image is mapped onto a film frame, converted to negative density through
-the curve, and grain is synthesised **in density space** at the profile's scanner pitch
+How it works: the image is mapped onto a film frame, each tone is placed at the negative
+density it would have come from (through the scan curve, or the film curve for scene-linear
+input), and grain is synthesised **in density space** at the profile's scanner pitch
 (6.35 µm): white noise filtered by the measured 2-D noise-power-spectrum kernel, given the
 measured amplitude σ_D(D) and skewness(D) pixel by pixel, then area-averaged onto the output
-grid and inverted back through the curve. A 24-MP image on 35 mm therefore shows the grain
+grid and brought back to the positive with the scan curve's slope, so the mean tone is
+preserved exactly and highlights get gentler grain than midtones, as in real scans. A 24-MP
+image on 35 mm therefore shows the grain
 of a 4000-dpi scan; a half-frame gets coarser grain; a 1000-px web image gets almost none —
 as a real scan downsized would. Closed-loop check: rendered flat fields re-measured with the
 profiler reproduce σ_D within 1 %, skewness within 0.01 and the autocorrelation within a few
-per cent (`eval/render/`).
+per cent (`eval/render/`). Against a real HP5@1600 scan, a rendered digital photo at the same
+pixel pitch shows grain within 10–25 % at every tone from deep shadow to highlight
+(`docs/research-notes.md`).
 
 ## Usage: profiling your own scans
 

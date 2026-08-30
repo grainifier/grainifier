@@ -105,3 +105,16 @@ Test: predicted σ_logL = P′(D)·σ_D (both at JPEG pitch) vs measured JPEG gr
 | measured | 0.137 | 0.080 | 0.040 | 0.037 | 0.026 | 0.018 |
 
 So the renderer's positive is now `L_out = L_in · 10^(P′(D)·ΔD)` with γ = 1.25 and black point = fog (`--print-gamma`, `--black-point`); exact film-curve inversion remains as `--print-gamma 0` for experiments. Before this change the render's grain was 3–4× too strong in midtones/highlights (film-curve inversion amplifies density noise on the shoulder). The same frame gives the tone placement used by the curve defaults: L 0.18 ↔ D ≈ 0.85, L 0.73 ↔ D 2.0.
+
+### Tone placement for finished positives (2026-08-30)
+A digital JPEG/TIFF is a finished positive, so its tones relate to the negative through the *scan inversion*, not through the film's exposure curve. With the H&D placeholder, L = 0.79 landed at D ≈ 1.4; the real frame has L 0.79 ↔ D 2.1. `ScanCurve` (black point ≈ fog 0.1, white point 2.5, γ 1.25) is now used in both directions for `--tone positive` (default): D = D_bp + (D_wp − D_bp)·L^(1/γ), grain in density, back with slope γ/((D − D_bp) ln 10). The film H&D curve remains for `--tone scene` (scene-linear input + `--exposure`).
+
+Like-for-like check, portrait L1041851 rendered at the real scan's pitch (12.9 µm/px) vs the real HP5@1600 3-pass scan JPEG of a different scene, σ_logL 10th percentile per tone:
+
+| L | 0.04 | 0.10 | 0.22 | 0.40 | 0.60 | 0.79 |
+|---|---|---|---|---|---|---|
+| real scan (3-pass) | 0.137 | 0.080 | 0.040 | 0.037 | 0.026 | 0.018 |
+| render, 1-pass profile | 0.170 | 0.089 | 0.056 | 0.040 | 0.028 | 0.023 |
+| render + `--softness-um 3.2 2.7` (3-pass) | 0.151 | 0.079 | 0.050 | 0.035 | 0.024 | 0.019 |
+
+Ratios 0.93–1.24 with the softness preset. Remaining differences: the real JPEG's shadows include 8-bit/JPEG noise; the real frame's own black/white points differ slightly from the defaults (NLP sets them per frame).
