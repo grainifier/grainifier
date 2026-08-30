@@ -13,7 +13,12 @@ python tools/make_dataset.py --version 2026.08      # → dist/grainifier-frame-
 ```
 - On zenodo.org: *New upload* → type *Dataset* → upload the tarball → copy the fields from `dist/*.zenodo.json` (title, description, creators, CC BY 4.0, keywords, related identifier "is supplement to" the GitHub repo). Reserve the DOI before publishing and put it in the repository README under *Profiles*.
 - New versions: *New version* on the same record — Zenodo keeps one concept DOI across versions.
-- Alternatively via the REST API with a personal access token (`deposit:write`, `deposit:actions`):
-  `curl -H "Authorization: Bearer $ZENODO_TOKEN" https://zenodo.org/api/deposit/depositions -X POST -d @dist/<name>.zenodo.json -H 'Content-Type: application/json'`, then PUT the file to the returned `links.bucket`, then POST `.../actions/publish`. Test the flow on https://sandbox.zenodo.org first (separate account/token).
+- Or with the uploader (token from `~/.config/zenodo/token` or `$ZENODO_TOKEN`; scopes `deposit:write` + `deposit:actions`, created at zenodo.org → Applications → Personal access tokens):
+  ```
+  python tools/zenodo_upload.py dist/grainifier-frame-stats-2026.08.tar.gz --metadata dist/grainifier-frame-stats-2026.08.zenodo.json            # draft + reserved DOI
+  python tools/zenodo_upload.py ... --publish                                                                                                     # irreversible
+  python tools/zenodo_upload.py ... --new-version <record id>                                                                                     # later versions
+  ```
+  `--sandbox` runs the same flow on https://sandbox.zenodo.org (separate account and token, `~/.config/zenodo/sandbox-token`).
 
 What is in the dataset and what is not: per-patch statistics and per-bin spectra only — no image content, not invertible to pictures. The raw scans are not published.
