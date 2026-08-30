@@ -246,19 +246,49 @@ def render_density(
     return (d + g).astype(np.float32)
 
 
+def positive_slope(d: np.ndarray, print_gamma: float, black_point: float, min_offset: float = 0.05) -> np.ndarray:
+    """d(log10 L_positive)/dD for a scan-style inversion.
+
+    Measured on the author's VueScan/Negative-Lab-Pro workflow (roll 2545 frame 7, raw DNG vs
+    delivered JPEG): the positive is a linear stretch of *density* between a black point at
+    base+fog and a white point, followed by a gamma, i.e. L ∝ ((D − D_bp)/(D_wp − D_bp))^γ.
+    Its slope in log space is γ / ((D − D_bp)·ln 10): ≈0.6 at D 1.0, ≈0.3 at D 2.0, steep in
+    the thin shadows. Predicted σ_logL = slope · σ_D matched the measured JPEG grain within
+    ~10 % at every tone. γ ≈ 1.25 fits that workflow; a contrasty darkroom print is higher.
+    """
+    return (np.float32(print_gamma) / (np.maximum(d - np.float32(black_point), np.float32(min_offset)) * np.float32(np.log(10.0)))).astype(np.float32)
+
+
 def render_image(
     lin_lum: np.ndarray,
     profile: GrainProfile,
     curve: Curve,
     negative: bool = False,
+    print_gamma: float | None = 1.25,
+    black_point: float | None = None,
     **kw,
 ) -> np.ndarray:
-    """Linear luminance in → linear positive out (or negative transmittance if negative=True)."""
+    """Linear luminance in → linear positive out (or negative transmittance if negative=True).
+
+    The H&D curve decides where in negative density each tone lands (which sets the grain's
+    amplitude and skew) and the grain is added there. Back to a positive:
+
+    - print_gamma=γ (default 1.25): scan-style inversion. The grain appears as a log-luminance
+      fluctuation of positive_slope(D)·ΔD (more density → brighter positive), so the input's
+      mean tone is preserved exactly and highlights get gentler grain than midtones, as in
+      real scans/prints. black_point defaults to the curve's fog.
+    - print_gamma=None: invert the film curve exactly ("re-expose the scene"). Amplifies
+      density noise wherever the film curve is flat; kept for experiments only.
+    """
     d = curve.density(lin_lum)
     dg = render_density(d, profile, **kw)
     if negative:
         return (10.0 ** (-dg)).astype(np.float32)
-    return curve.inverse(dg)
+    if print_gamma is None:
+        return curve.inverse(dg)
+    bp = curve.fog if black_point is None else black_point
+    gain = positive_slope(d, print_gamma, bp)
+    return (lin_lum * 10.0 ** (gain * (dg - d))).astype(np.float32)
 
 
 # ----------------------------------------------------------------------------- image I/O

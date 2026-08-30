@@ -135,6 +135,8 @@ def cmd_render(a):
     out = render_image(
         lum, prof, curve, negative=a.negative, film_width_mm=a.film_width_mm,
         grain_scale=a.grain_scale, softness_um=soft, seed=a.seed,
+        print_gamma=None if a.print_gamma <= 0 else a.print_gamma,
+        black_point=a.black_point,
     )
     save_image(a.output, out, bits=a.bits, encode_srgb=not a.negative)
     h, w = lum.shape
@@ -187,6 +189,8 @@ def main(argv=None):
     s.add_argument("--mid-density", type=float, default=0.90, help="negative density a mid-grey lands on")
     s.add_argument("--exposure", type=float, default=0.0, help="stops of exposure offset applied to the scene")
     s.add_argument("--grain-scale", type=float, default=1.0)
+    s.add_argument("--print-gamma", type=float, default=1.25, help="gamma of the scan-style positive (density stretched between black and white point, then gamma); 1.25 matches a VueScan/NLP workflow, higher = contrastier print; 0 = invert the film curve exactly")
+    s.add_argument("--black-point", type=float, help="negative density of the positive's black point (default: the curve's fog)")
     s.add_argument("--softness-um", type=float, nargs="+", default=[0.0], help="scan-softness Gaussian blur (µm), one value or y x")
     s.add_argument("--negative", action="store_true", help="output the negative's linear transmittance instead of a positive")
     s.add_argument("--linear-input", action="store_true")

@@ -93,3 +93,15 @@ Decisions
 `grainifier render` (`grainifier/render.py`): NPS kernel from the profile (mid-density bins, unit-normalised, zero-phase) ⊛ white noise, per-pixel skew via n + a(n²−1), amplitude σ_D(D), synthesised at 6.35 µm and box-averaged to the output pitch; logistic H&D placeholder curve (fog 0.1, Dmax 2.6, γ 0.8, mid-grey → D 0.9 for HP5@1600). Closed loop against the profile: σ within 1 %, skew within 0.01, lag-1 x 0.53 vs 0.53–0.58, lag-1 y 0.28 vs 0.29–0.34. Visual: rendered flat field vs the flattest real 1-pass BWXX patch at D≈1.2 match in scale and anisotropy; real has a little more low-frequency mottle (σ 0.130 vs 0.114, partly residual texture).
 
 Known gaps: H&D curve is a placeholder (needs the calibration roll); single NPS shape for all densities (profile has per-bin spectra — could interpolate); no spectral response/filters; skew transform slightly whitens the spectrum; grain beyond 4000 dpi is interpolated, not finer than the scan.
+
+## Positive model validated on a real frame (2026-08-30)
+Roll 2545 frame 7 exists both as raw DNG and as the delivered VueScan/NLP JPEG. Quantile-matching per-patch mean density (raw, box-downsized to the JPEG pitch) to per-patch mean log-luminance (JPEG) gives the workflow's positive curve P(D) without registration. Its slope P′(D): 6.5 / 1.8 / 0.61 / 0.60 / 0.33 / 0.26 at D = 0.2 / 0.4 / 1.0 / 1.2 / 2.0 / 2.2 — a linear stretch of density between a black point ≈ fog and a white point, then γ ≈ 1.25: P′(D) = γ / ((D − D_bp) ln 10).
+
+Test: predicted σ_logL = P′(D)·σ_D (both at JPEG pitch) vs measured JPEG grain, 10th-percentile per tone bin:
+
+| L | 0.04 | 0.10 | 0.22 | 0.40 | 0.60 | 0.79 |
+|---|---|---|---|---|---|---|
+| predicted | 0.139 | 0.080 | 0.038 | 0.028 | 0.025 | 0.016 |
+| measured | 0.137 | 0.080 | 0.040 | 0.037 | 0.026 | 0.018 |
+
+So the renderer's positive is now `L_out = L_in · 10^(P′(D)·ΔD)` with γ = 1.25 and black point = fog (`--print-gamma`, `--black-point`); exact film-curve inversion remains as `--print-gamma 0` for experiments. Before this change the render's grain was 3–4× too strong in midtones/highlights (film-curve inversion amplifies density noise on the shoulder). The same frame gives the tone placement used by the curve defaults: L 0.18 ↔ D ≈ 0.85, L 0.73 ↔ D 2.0.
