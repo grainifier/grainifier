@@ -16,6 +16,15 @@ keywords:
   - noise power spectrum
   - image processing
 references:
+  - type: data
+    title: "grainifier frame statistics dataset"
+    authors:
+      - family-names: Fyhr
+        given-names: Pontus
+        orcid: "https://orcid.org/0009-0009-8733-214X"
+    year: 2026
+    doi: 10.5281/zenodo.22170494
+    repository: "https://doi.org/10.5281/zenodo.22170495"
   - type: article
     title: "A Stochastic Film Grain Model for Resolution-Independent Rendering"
     authors:

@@ -1,6 +1,7 @@
 # grainifier
 
 Real film grain, measured from real scans, applied to digital images. Open source (MIT).
+Dataset: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22170495.svg)](https://doi.org/10.5281/zenodo.22170495)
 
 ## Quick start
 
@@ -163,11 +164,11 @@ Profile JSON layout: metadata (`stock`, `exposure_index`, `developer`, `scanner`
 `autocorr_x/y[0..8]`; `nps_green.spectra` per bin (rfft2 layout, D² per pixel);
 `per_roll{}`; `density_histogram`.
 
-The per-frame caches (`data/frames/`, ~1 MB per frame, ~0.6 GB for the current profiles)
-are the reproducibility layer: any profile can be rebuilt from them with different
-thresholds, and they contain no image content — only patch statistics and spectra. They are
-published as a Zenodo dataset (see `docs/zenodo.md`) rather than kept in git; the raw scans
-stay private. More stocks (Tri-X, FP4+, Fomapan, the same stocks at box speed) follow as they
+The per-frame statistics behind these profiles are published as a dataset —
+**[doi:10.5281/zenodo.22170495](https://doi.org/10.5281/zenodo.22170495)** (CC BY 4.0; concept
+DOI for all versions: 10.5281/zenodo.22170494). 728 frames, 659 MB: per-patch statistics and
+per-bin spectra only, in shuffled order, so no image content; any profile can be rebuilt from
+it with `grainifier aggregate` (bit-identical to the bundled ones). The raw scans stay private. More stocks (Tri-X, FP4+, Fomapan, the same stocks at box speed) follow as they
 are profiled.
 
 ## Repository map

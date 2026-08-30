@@ -7,7 +7,8 @@ Two records, two purposes:
 - `.zenodo.json` in the repo root provides title, creators, license, keywords and the cited papers; Zenodo reads it at release time.
 - Each GitHub release (`gh release create v0.1.0 --generate-notes`) then gets its own DOI plus a concept DOI that always resolves to the latest version. Paste the concept DOI badge into the README and `CITATION.cff` (`doi:` field) once it exists.
 
-## 2. Frame-statistics dataset (manual upload, updated when new stocks are profiled)
+## 2. Frame-statistics dataset — published 2026-08-30
+Record https://zenodo.org/record/22170495, DOI 10.5281/zenodo.22170495 (version 2026.08), concept DOI 10.5281/zenodo.22170494. New stocks → `python tools/zenodo_upload.py <tarball> --metadata <json> --new-version 22170495`, review, `--deposition <new id> --publish`.
 ```
 python tools/make_dataset.py --version 2026.08      # → dist/grainifier-frame-stats-2026.08.tar.gz (+ .zenodo.json)
 ```
