@@ -85,19 +85,33 @@ def test_render_image_outputs_and_seed():
 
 
 def test_positive_model_matches_slope_times_sigma():
-    """Grain in the positive must equal positive_slope(D) * sigma_D in log-luminance."""
-    from grainifier.render import positive_slope
+    """Grain in the positive must equal ScanCurve.slope(D) * sigma_D in log-luminance, tone preserved."""
+    from grainifier.render import ScanCurve
 
     p = GrainProfile("hp5-plus-ei1600-1pass")
-    c = Curve()
+    sc = ScanCurve()
     for L in (0.05, 0.2, 0.6):
         lum = np.full((512, 512), L, np.float32)
-        out = render_image(lum, p, c, seed=5, film_width_mm=512 * p.pitch_um / 1000.0)
-        d = float(c.density(np.array([L], np.float32))[0])
-        expected = positive_slope(np.array([d], np.float32), 1.25, c.fog)[0] * p.sigma_at(np.array([d]))[0]
+        out = render_image(lum, p, seed=5, film_width_mm=512 * p.pitch_um / 1000.0)
+        d = float(sc.density(np.array([L], np.float32))[0])
+        expected = sc.slope(np.array([d], np.float32))[0] * p.sigma_at(np.array([d]))[0]
         measured = np.log10(out).std()
         assert abs(measured - expected) / expected < 0.08, (L, d, measured, expected)
-        assert abs(np.median(out) - L) / L < 0.05  # tone preserved
+        assert abs(np.median(out) - L) / L < 0.05
+    # placement matches the measured real-frame pairs (L 0.05/0.24/0.79 -> D ~0.4/1.0/2.1)
+    d = sc.density(np.array([0.05, 0.24, 0.79], np.float32))
+    assert np.allclose(d, [0.32, 0.87, 2.09], atol=0.12)
     # highlights carry gentler grain than midtones in log-luminance, as in real scans
-    s = lambda L: np.log10(render_image(np.full((256, 256), L, np.float32), p, c, seed=1, film_width_mm=256 * p.pitch_um / 1000.0)).std()
+    s = lambda L: np.log10(render_image(np.full((256, 256), L, np.float32), p, seed=1, film_width_mm=256 * p.pitch_um / 1000.0)).std()
     assert s(0.8) < s(0.25) < s(0.05)
+
+
+def test_scene_tone_mode_and_exact_inverse():
+    p = GrainProfile("bwxx-1pass")
+    lum = np.full((256, 256), 0.18, np.float32)
+    a = render_image(lum, p, Curve(), tone="scene", seed=1, film_width_mm=256 * p.pitch_um / 1000.0)
+    b = render_image(lum, p, Curve(), tone="scene", print_gamma=1.25, seed=1, film_width_mm=256 * p.pitch_um / 1000.0)
+    assert np.isfinite(a).all() and np.isfinite(b).all() and a.std() > 0 and b.std() > 0
+    assert abs(np.median(b) - 0.18) / 0.18 < 0.05
+    with pytest.raises(ValueError):
+        render_image(lum, p, tone="nonsense")

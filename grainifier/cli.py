@@ -124,23 +124,22 @@ def cmd_profiles(a):
 
 
 def cmd_render(a):
-    from .render import Curve, GrainProfile, load_image_linear, render_image, save_image
+    from .render import Curve, GrainProfile, ScanCurve, load_image_linear, render_image, save_image
 
     prof = GrainProfile(a.profile)
     curve = Curve(fog=a.fog, dmax=a.dmax, gamma=a.gamma, mid_density=a.mid_density)
+    scan = ScanCurve(black_point=a.black_point if a.black_point is not None else a.fog, white_point=a.white_point, gamma=a.print_gamma)
     lum = load_image_linear(a.input, assume_linear=a.linear_input)
     if a.exposure:
         lum = lum * (2.0 ** a.exposure)
     soft = tuple(a.softness_um) if len(a.softness_um) == 2 else (a.softness_um[0], a.softness_um[0])
     out = render_image(
-        lum, prof, curve, negative=a.negative, film_width_mm=a.film_width_mm,
-        grain_scale=a.grain_scale, softness_um=soft, seed=a.seed,
-        print_gamma=None if a.print_gamma <= 0 else a.print_gamma,
-        black_point=a.black_point,
+        lum, prof, curve, negative=a.negative, scan=None if a.tone == "scene" and a.print_gamma <= 0 else scan,
+        tone=a.tone, film_width_mm=a.film_width_mm, grain_scale=a.grain_scale, softness_um=soft, seed=a.seed,
     )
     save_image(a.output, out, bits=a.bits, encode_srgb=not a.negative)
     h, w = lum.shape
-    print(f"{a.output}: {w}x{h}, profile {prof.name}, pitch {a.film_width_mm * 1000 / max(h, w):.2f} µm/px, "
+    print(f"{a.output}: {w}x{h}, profile {prof.name}, pitch {a.film_width_mm * 1000 / max(h, w):.2f} µm/px, tone={a.tone}, "
           f"σ_D reliable to D≈{prof.reliable_dmax:.1f}, {'negative transmittance' if a.negative else 'positive sRGB'} {a.bits}-bit")
 
 
@@ -183,14 +182,16 @@ def main(argv=None):
     s.add_argument("output")
     s.add_argument("--profile", required=True, help="bundled profile name (see `grainifier profiles`) or path to a profile JSON")
     s.add_argument("--film-width-mm", type=float, default=36.0, help="film frame size mapped to the image's long side")
+    s.add_argument("--tone", choices=("positive", "scene"), default="positive", help="positive: input is a finished image, placed on the negative via the scan curve (default); scene: input is scene-linear, placed via the film H&D curve + --exposure")
     s.add_argument("--fog", type=float, default=0.10)
     s.add_argument("--dmax", type=float, default=2.6)
     s.add_argument("--gamma", type=float, default=0.80)
     s.add_argument("--mid-density", type=float, default=0.90, help="negative density a mid-grey lands on")
     s.add_argument("--exposure", type=float, default=0.0, help="stops of exposure offset applied to the scene")
     s.add_argument("--grain-scale", type=float, default=1.0)
-    s.add_argument("--print-gamma", type=float, default=1.25, help="gamma of the scan-style positive (density stretched between black and white point, then gamma); 1.25 matches a VueScan/NLP workflow, higher = contrastier print; 0 = invert the film curve exactly")
-    s.add_argument("--black-point", type=float, help="negative density of the positive's black point (default: the curve's fog)")
+    s.add_argument("--print-gamma", type=float, default=1.25, help="gamma of the scan-style positive (density stretched between black and white point, then gamma); 1.25 matches a VueScan/NLP workflow, higher = contrastier print; 0 with --tone scene = invert the film curve exactly")
+    s.add_argument("--black-point", type=float, help="negative density of the positive's black point (default: --fog)")
+    s.add_argument("--white-point", type=float, default=2.5, help="negative density of the positive's white point")
     s.add_argument("--softness-um", type=float, nargs="+", default=[0.0], help="scan-softness Gaussian blur (µm), one value or y x")
     s.add_argument("--negative", action="store_true", help="output the negative's linear transmittance instead of a positive")
     s.add_argument("--linear-input", action="store_true")
