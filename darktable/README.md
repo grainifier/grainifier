@@ -49,5 +49,7 @@ Upstreaming it is the way to reach users; the module is written to darktable's c
 
 ## Status
 
-Branch `darktable`; first build against darktable 5.6.1. Not yet: OpenCL path, per-density NPS
-(one kernel per profile), softness control.
+Branch `darktable`. Builds and runs against darktable 5.6.1 (macOS/Homebrew). Validated
+headlessly with `darktable-cli`: a 24-MP export through the module matches the Python renderer's
+output within 1–2 % in grain σ at every tone (`docs/research-notes.md`). Not yet: OpenCL path,
+per-density NPS (one kernel per profile), softness control, upstream PR.

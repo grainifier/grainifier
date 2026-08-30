@@ -76,7 +76,26 @@ typedef struct dt_iop_grainifier_data_t
   float black_point, white_point, gamma;
   uint32_t seed;
   float skew_a[GRAINIFIER_GRID_N]; // skew(D) converted to the cubic-transform coefficient
+  // normalised lag-1 autocorrelations of the grain field per kernel (index 0 = fine kernel,
+  // 1.. = decimated), used to keep unit variance when interpolating between lattice nodes
+  float rho_x[GRAINIFIER_N_DEC + 1], rho_y[GRAINIFIER_N_DEC + 1], rho_xy[GRAINIFIER_N_DEC + 1];
 } dt_iop_grainifier_data_t;
+
+// autocorrelation of (white noise ⊛ k) at lag (dx, dy), normalised by lag 0
+static void _kernel_rho(const float *k, const int K, float *rx, float *ry, float *rxy)
+{
+  double r00 = 0, r10 = 0, r01 = 0, r11 = 0;
+  for(int y = 0; y < K; y++)
+    for(int x = 0; x < K; x++)
+    {
+      const double v = k[y * K + x];
+      r00 += v * v;
+      if(x + 1 < K) r10 += v * k[y * K + x + 1];
+      if(y + 1 < K) r01 += v * k[(y + 1) * K + x];
+      if(x + 1 < K && y + 1 < K) r11 += v * k[(y + 1) * K + x + 1];
+    }
+  *rx = r10 / r00; *ry = r01 / r00; *rxy = r11 / r00;
+}
 
 
 const char *name()
@@ -192,6 +211,8 @@ void process(dt_iop_module_t *self,
   const int K = (m == 1) ? GRAINIFIER_KERNEL : GRAINIFIER_DEC_KERNEL;
   const int Kh = K / 2;
   const float *const kernel = (m == 1) ? prof->kernel : prof->dec_kernel[dec];
+  const int ri = (m == 1) ? 0 : dec + 1;
+  const float rho_x = d->rho_x[ri], rho_y = d->rho_y[ri], rho_xy = d->rho_xy[ri];
   // fine lattice with the full 15×15 kernel has unit variance; decimated kernels carry theirs
   const float amount = d->grain_scale;
   const float bp = d->black_point, wp = d->white_point, gam = d->gamma;
@@ -223,10 +244,12 @@ void process(dt_iop_module_t *self,
       // grain field: white lattice noise ⊛ kernel, bilinearly interpolated between lattice nodes so
       // that pixels finer than the lattice (zoomed-in views, > 4000 dpi images) stay smooth
       float n = 0.0f;
+      const float wa = (1.0f - tx) * (1.0f - ty), wb = tx * (1.0f - ty), wc = (1.0f - tx) * ty, wd = tx * ty;
+      const float wts[4] = { wa, wb, wc, wd };
       for(int q = 0; q < 2; q++)
         for(int p = 0; p < 2; p++)
         {
-          const float w = (p ? tx : 1.0f - tx) * (q ? ty : 1.0f - ty);
+          const float w = wts[q * 2 + p];
           if(w < 1e-4f) continue;
           const int32_t cx = cx0 + p, cy = cy0 + q;
           float acc = 0.0f;
@@ -238,6 +261,10 @@ void process(dt_iop_module_t *self,
           }
           n += w * acc;
         }
+      // interpolating between correlated nodes lowers the variance; restore it exactly
+      const float var = wa * wa + wb * wb + wc * wc + wd * wd
+                        + 2.0f * ((wa * wb + wc * wd) * rho_x + (wa * wc + wb * wd) * rho_y + (wa * wd + wb * wc) * rho_xy);
+      n /= sqrtf(MAX(var, 1e-6f));
 
       // skew and amplitude at this density
       const float a = _interp_grid(d->skew_a, D);
@@ -273,6 +300,9 @@ void commit_params(dt_iop_module_t *self,
   d->gamma = p->gamma;
   d->seed = (uint32_t)p->seed * 2654435761U + 12345U;
   for(int i = 0; i < GRAINIFIER_GRID_N; i++) d->skew_a[i] = _skew_to_a(d->profile->skew[i]);
+  _kernel_rho(d->profile->kernel, GRAINIFIER_KERNEL, &d->rho_x[0], &d->rho_y[0], &d->rho_xy[0]);
+  for(int k = 0; k < GRAINIFIER_N_DEC; k++)
+    _kernel_rho(d->profile->dec_kernel[k], GRAINIFIER_DEC_KERNEL, &d->rho_x[k + 1], &d->rho_y[k + 1], &d->rho_xy[k + 1]);
 }
 
 void init_pipe(dt_iop_module_t *self, dt_dev_pixelpipe_t *pipe, dt_dev_pixelpipe_iop_t *piece)
