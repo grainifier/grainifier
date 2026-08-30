@@ -1,7 +1,7 @@
 # grainifier
 
 Real film grain, measured from real scans, applied to digital images. Open source (MIT).
-Dataset: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22170495.svg)](https://doi.org/10.5281/zenodo.22170495)
+Software: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22171275.svg)](https://doi.org/10.5281/zenodo.22171275) · Dataset: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22170495.svg)](https://doi.org/10.5281/zenodo.22170495) · [![ci](https://github.com/grainifier/grainifier/actions/workflows/ci.yml/badge.svg)](https://github.com/grainifier/grainifier/actions/workflows/ci.yml)
 
 ## Quick start
 
@@ -196,6 +196,12 @@ too if you use it in research (machine-readable list in `CITATION.cff`):
 - I. Stephenson, A. Saunders. *Simulating Film Grain using the Noise-Power Spectrum.* TPCG 2007.
 - A. Norkin, N. Birkbeck. *Film Grain Synthesis for AV1 Video Codec.* DCC 2018.
 - R. Selwyn's granularity law and the Kodak/Ilford RMS-granularity conventions for sanity checks.
+
+## Citing
+
+Software (all versions): doi:10.5281/zenodo.22171275 — this release (0.1.0): doi:10.5281/zenodo.22171276.
+Dataset: doi:10.5281/zenodo.22170495. `CITATION.cff` has the machine-readable form; please also
+cite the papers under *Built on*.
 
 ## License
 

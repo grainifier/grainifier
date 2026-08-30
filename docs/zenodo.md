@@ -5,7 +5,7 @@ Two records, two purposes:
 ## 1. Software DOI (per release) — GitHub ↔ Zenodo integration
 - Log in to https://zenodo.org with GitHub, go to *GitHub* in the account menu, flip the switch for `grainifier/grainifier` (the org must exist first and you must be its admin).
 - `.zenodo.json` in the repo root provides title, creators, license, keywords and the cited papers; Zenodo reads it at release time.
-- Each GitHub release (`gh release create v0.1.0 --generate-notes`) then gets its own DOI plus a concept DOI that always resolves to the latest version. Paste the concept DOI badge into the README and `CITATION.cff` (`doi:` field) once it exists.
+- Each GitHub release gets its own DOI plus a concept DOI that always resolves to the latest version. v0.1.0 (2026-08-30): record https://zenodo.org/records/22171276, DOI 10.5281/zenodo.22171276, concept DOI 10.5281/zenodo.22171275 (used in the README badge and `CITATION.cff`). Later releases: `gh release create vX.Y.Z --notes ...` after bumping `pyproject.toml`, `grainifier/__init__.py`, `CITATION.cff`; nothing else to do.
 
 ## 2. Frame-statistics dataset — published 2026-08-30
 Record https://zenodo.org/record/22170495, DOI 10.5281/zenodo.22170495 (version 2026.08), concept DOI 10.5281/zenodo.22170494. New stocks → `python tools/zenodo_upload.py <tarball> --metadata <json> --new-version 22170495`, review, `--deposition <new id> --publish`.

@@ -7,6 +7,14 @@ authors:
     given-names: Pontus
     orcid: "https://orcid.org/0009-0009-8733-214X"
 license: MIT
+doi: 10.5281/zenodo.22171275
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.22171275
+    description: "concept DOI, all versions"
+  - type: doi
+    value: 10.5281/zenodo.22171276
+    description: "version 0.1.0"
 repository-code: "https://github.com/grainifier/grainifier"
 version: 0.1.0
 date-released: 2026-08-30
