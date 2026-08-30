@@ -118,3 +118,13 @@ Like-for-like check, portrait L1041851 rendered at the real scan's pitch (12.9 �
 | render + `--softness-um 3.2 2.7` (3-pass) | 0.151 | 0.079 | 0.050 | 0.035 | 0.024 | 0.019 |
 
 Ratios 0.93–1.24 with the softness preset. Remaining differences: the real JPEG's shadows include 8-bit/JPEG noise; the real frame's own black/white points differ slightly from the defaults (NLP sets them per frame).
+
+### Scan-curve presets from 19 raw+positive pairs (2026-08-30)
+Quantile-matched P(D) for two workflows. VueScan's own `inv*` output (9 frames, HP5@1600 and BWXX): fitted black point 0.0–0.2 (median 0.03 — black sits at clear film), white point 2.1–2.7 (median 2.6), γ 1.15–1.58 (median ≈1.45, one outlier). LR/Negative Lab Pro exports (`neg_*.jpg`, 10 frames, HP5@1600 and Tri-X): a power law fits poorly (per-image auto tone), but the slope is systematically steeper.
+
+| workflow | P′(D) median at D = 0.5 / 1.0 / 1.5 / 2.0 | implied γ (bp 0.03) |
+|---|---|---|
+| VueScan | 1.27 / 0.74 / 0.43 / 0.51 | ≈ 1.45 |
+| NLP | 2.19 / 0.99 / 0.67 / 0.59 | ≈ 2.2, black point often raised to D 0.2–0.6 |
+
+Consequences: `ScanCurve` defaults are now 0.03 / 2.6 / 1.45 (`--scan-preset vuescan`); `--scan-preset nlp` = 0.20 / 2.6 / 2.2 approximates the NLP look, whose positives carry ~1.5–2× more grain at the same tone. Tone placement with the new defaults: L 0.05 / 0.24 / 0.79 → D 0.36 / 0.99 / 2.21 (measured on real frames: 0.4 / 1.0 / 2.1). Scripts: scratch `fit_scancurve.py` / `slopes.py` (to be folded into a `grainifier scancurve` command).

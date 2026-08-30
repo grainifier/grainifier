@@ -254,15 +254,33 @@ class ScanCurve:
 
         L = ((D − D_bp) / (D_wp − D_bp)) ** gamma          D = D_bp + (D_wp − D_bp) · L ** (1/gamma)
 
-    Its log-slope dlog10(L)/dD = gamma / ((D − D_bp) ln 10) is ≈0.6 at D 1.0, ≈0.3 at D 2.0 and
-    steep in the thin shadows; predicted σ_logL = slope · σ_D matched the JPEG's measured grain
-    within ~10 % at every tone. gamma ≈ 1.25 fits that workflow; a contrasty print is higher.
+    Its log-slope dlog10(L)/dD = gamma / ((D − D_bp) ln 10) is ≈0.7 at D 1.0, ≈0.4 at D 1.5 and
+    steep in the thin shadows; predicted σ_logL = slope · σ_D matched a JPEG's measured grain
+    within ~10 % at every tone. See PRESETS for the measured workflows.
     """
 
-    black_point: float = 0.10
-    white_point: float = 2.50
-    gamma: float = 1.25
+    black_point: float = 0.03
+    white_point: float = 2.60
+    gamma: float = 1.45
     min_offset: float = 0.05  # guards the slope in the clipped-black region
+
+    # Presets measured by quantile-matching raw DNGs against delivered positives of the same
+    # frames (2026-08-30; 9 VueScan frames, 10 Lightroom/Negative Lab Pro frames):
+    #   vuescan: VueScan's own inversion — black at clear film, γ ≈ 1.45, consistent frame to frame
+    #   nlp:     NLP/Lightroom — per-image auto tone; slope ≈ 1.5–2× steeper, black point raised.
+    #            A fixed curve is only an approximation of it.
+    PRESETS = {
+        "vuescan": dict(black_point=0.03, white_point=2.60, gamma=1.45),
+        "nlp": dict(black_point=0.20, white_point=2.60, gamma=2.20),
+    }
+
+    @classmethod
+    def preset(cls, name: str, **overrides) -> "ScanCurve":
+        if name not in cls.PRESETS:
+            raise KeyError(f"unknown scan preset {name!r}; choose from {sorted(cls.PRESETS)}")
+        kw = dict(cls.PRESETS[name])
+        kw.update({k: v for k, v in overrides.items() if v is not None})
+        return cls(**kw)
 
     def density(self, lin: np.ndarray) -> np.ndarray:
         f = np.clip(lin, 0.0, 1.0) ** np.float32(1.0 / self.gamma)

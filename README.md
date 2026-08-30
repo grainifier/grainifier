@@ -39,7 +39,8 @@ grainifier render photo.jpg out.png --profile hp5-plus-ei1600-1pass
 | `--profile` | — | bundled profile name (`grainifier profiles`) or path to a profile JSON |
 | `--film-width-mm` | 36 | film frame width mapped onto the image's long side (36 = 35 mm full frame, 17 = half-frame, 56 = 6×6). This sets the physical grain size. |
 | `--tone` | positive | `positive`: the input is a finished image; its tones are placed on the negative through the inverse scan curve (black point, white point, gamma). `scene`: the input is scene-linear (from a RAW); the film H&D curve and `--exposure` decide the density |
-| `--print-gamma --black-point --white-point` | 1.25 / =fog / 2.5 | the scan curve: positive = ((D − D_bp)/(D_wp − D_bp))^γ. Measured on a VueScan/Negative Lab Pro workflow; higher γ = contrastier print |
+| `--scan-preset` | vuescan | measured negative→positive curve: `vuescan` (VueScan's inversion: black point 0.03, white point 2.6, γ 1.45) or `nlp` (Lightroom/Negative Lab Pro look: 0.2 / 2.6 / 2.2 — ~1.5–2× steeper, so a grainier positive) |
+| `--print-gamma --black-point --white-point` | preset | override the preset: positive = ((D − D_bp)/(D_wp − D_bp))^γ; higher γ = contrastier, grainier |
 | `--fog --dmax --gamma --mid-density` | 0.1 / 2.6 / 0.8 / 0.9 | placeholder logistic H&D curve, used with `--tone scene` |
 | `--exposure` | 0 | stops of exposure offset (`--tone scene`) |
 | `--grain-scale` | 1 | multiplier on σ_D (artistic control; 1 = as measured) |

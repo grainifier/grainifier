@@ -128,7 +128,7 @@ def cmd_render(a):
 
     prof = GrainProfile(a.profile)
     curve = Curve(fog=a.fog, dmax=a.dmax, gamma=a.gamma, mid_density=a.mid_density)
-    scan = ScanCurve(black_point=a.black_point if a.black_point is not None else a.fog, white_point=a.white_point, gamma=a.print_gamma)
+    scan = ScanCurve.preset(a.scan_preset, black_point=a.black_point, white_point=a.white_point, gamma=a.print_gamma if a.print_gamma > 0 else None)
     lum = load_image_linear(a.input, assume_linear=a.linear_input)
     if a.exposure:
         lum = lum * (2.0 ** a.exposure)
@@ -189,9 +189,10 @@ def main(argv=None):
     s.add_argument("--mid-density", type=float, default=0.90, help="negative density a mid-grey lands on")
     s.add_argument("--exposure", type=float, default=0.0, help="stops of exposure offset applied to the scene")
     s.add_argument("--grain-scale", type=float, default=1.0)
-    s.add_argument("--print-gamma", type=float, default=1.25, help="gamma of the scan-style positive (density stretched between black and white point, then gamma); 1.25 matches a VueScan/NLP workflow, higher = contrastier print; 0 with --tone scene = invert the film curve exactly")
-    s.add_argument("--black-point", type=float, help="negative density of the positive's black point (default: --fog)")
-    s.add_argument("--white-point", type=float, default=2.5, help="negative density of the positive's white point")
+    s.add_argument("--scan-preset", choices=("vuescan", "nlp"), default="vuescan", help="measured negative→positive curve: vuescan (VueScan inversion, γ≈1.45, default) or nlp (Lightroom/Negative Lab Pro look, ≈1.5–2× steeper, grainier positive)")
+    s.add_argument("--print-gamma", type=float, default=0.0, help="override the preset's gamma (density stretched between black and white point, then gamma); higher = contrastier, grainier positive")
+    s.add_argument("--black-point", type=float, help="override the preset's black point (negative density that maps to black)")
+    s.add_argument("--white-point", type=float, help="override the preset's white point")
     s.add_argument("--softness-um", type=float, nargs="+", default=[0.0], help="scan-softness Gaussian blur (µm), one value or y x")
     s.add_argument("--negative", action="store_true", help="output the negative's linear transmittance instead of a positive")
     s.add_argument("--linear-input", action="store_true")

@@ -107,7 +107,14 @@ def test_positive_model_matches_slope_times_sigma():
         assert out.max() < 20 * L  # no exploding shadow speckles
     # placement matches the measured real-frame pairs (L 0.05/0.24/0.79 -> D ~0.4/1.0/2.1)
     d = sc.density(np.array([0.05, 0.24, 0.79], np.float32))
-    assert np.allclose(d, [0.32, 0.87, 2.09], atol=0.12)
+    assert np.allclose(d, [0.40, 1.00, 2.10], atol=0.12)
+    # presets: NLP is the steeper (grainier) positive; overrides win
+    from grainifier.render import ScanCurve as SC
+    v, n = SC.preset("vuescan"), SC.preset("nlp")
+    assert n.slope(np.array([1.0], np.float32))[0] > 1.4 * v.slope(np.array([1.0], np.float32))[0]
+    assert SC.preset("vuescan", gamma=2.0).gamma == 2.0 and SC.preset("vuescan", gamma=None).gamma == v.gamma
+    with pytest.raises(KeyError):
+        SC.preset("darkroom")
     # highlights carry gentler grain than midtones in log-luminance, as in real scans
     s = lambda L: np.log10(np.maximum(render_image(np.full((256, 256), L, np.float32), p, seed=1, film_width_mm=256 * p.pitch_um / 1000.0), 1e-6)).std()
     assert s(0.8) < s(0.25) < s(0.05)
