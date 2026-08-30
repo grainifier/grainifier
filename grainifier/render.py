@@ -268,6 +268,11 @@ class ScanCurve:
         f = np.clip(lin, 0.0, 1.0) ** np.float32(1.0 / self.gamma)
         return (self.black_point + (self.white_point - self.black_point) * f).astype(np.float32)
 
+    def positive(self, d: np.ndarray) -> np.ndarray:
+        """Negative density → linear positive luminance (0 at/below the black point)."""
+        f = np.clip((d - self.black_point) / (self.white_point - self.black_point), 0.0, None)
+        return (f ** np.float32(self.gamma)).astype(np.float32)
+
     def slope(self, d: np.ndarray) -> np.ndarray:
         return (np.float32(self.gamma) / (np.maximum(d - np.float32(self.black_point), np.float32(self.min_offset)) * np.float32(np.log(10.0)))).astype(np.float32)
 
@@ -292,8 +297,9 @@ def render_image(
     tone="positive" (default): the input is a finished positive (a JPEG, an edited TIFF). Its
         tones are placed on the negative through the inverse ScanCurve — the same relation a
         scan of a real negative has to its delivered positive — grain is added in density, and
-        the ScanCurve slope brings it back: L_out = L_in · 10^(slope(D)·ΔD). Mean tone is
-        preserved exactly; highlights get gentler grain than midtones, as in real scans.
+        the ScanCurve brings it back: L_out = P(D + ΔD). To first order that is a
+        log-luminance fluctuation of slope(D)·ΔD (mean tone preserved), but it stays bounded
+        near the black point where the linearised slope would explode.
     tone="scene": the input is scene-linear (from a RAW). The film H&D `curve` (with
         --exposure) decides the density; the positive is then formed with the ScanCurve slope,
         or, if print_gamma is None and tone == "scene", by inverting the film curve exactly.
@@ -316,8 +322,12 @@ def render_image(
         return (10.0 ** (-dg)).astype(np.float32)
     if tone == "scene" and print_gamma is None and scan is None:
         return curve.inverse(dg)
-    gain = sc.slope(d)
-    return (lin_lum * 10.0 ** (gain * (dg - d))).astype(np.float32)
+    if tone == "positive":
+        # exact: the input already equals sc.positive(d), so this is L_in · P(D+ΔD)/P(D) without
+        # any linearisation — bounded near the black point (no exploding shadow speckles)
+        return sc.positive(dg)
+    base = np.maximum(sc.positive(d), np.float32(1e-6))
+    return (lin_lum * sc.positive(dg) / base).astype(np.float32)
 
 
 # ----------------------------------------------------------------------------- image I/O
