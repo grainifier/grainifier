@@ -7,8 +7,9 @@
 # and inserts it right after "grain" in every pipeline-order table of src/common/iop_order.c.
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
-DT=${1:?darktable source dir}
+DT=$(cd "${1:?darktable source dir}" && pwd)
 BUILD=${2:-$DT/build}
+mkdir -p "$BUILD"; BUILD=$(cd "$BUILD" && pwd)
 
 cp "$HERE/grainifier.c" "$HERE/grainifier_profiles.h" "$DT/src/iop/"
 
@@ -30,7 +31,7 @@ mkdir -p "$BUILD"
 cd "$BUILD"
 if [ ! -f CMakeCache.txt ]; then
   BREW=$(brew --prefix 2>/dev/null || echo /usr/local)
-  cmake -G Ninja "$DT" \
+  cmake "$DT" \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_INSTALL_PREFIX="$BUILD/install" \
     -DCMAKE_PREFIX_PATH="$BREW" \
@@ -39,5 +40,5 @@ if [ ! -f CMakeCache.txt ]; then
     -DUSE_LUA=OFF -DUSE_GMIC=OFF -DUSE_GRAPHICSMAGICK=OFF -DUSE_PORTMIDI=OFF -DUSE_MAP=OFF -DUSE_LIBSECRET=OFF -DUSE_KWALLET=OFF \
     -DBUILD_CMSTEST=OFF -DBUILD_PRINT=OFF -DUSE_CAMERA_SUPPORT=OFF -DBUILD_SSE2_CODEPATHS=OFF
 fi
-ninja
+cmake --build . -j"$(sysctl -n hw.ncpu 2>/dev/null || nproc)"
 echo "built: $BUILD/lib/darktable/plugins/libgrainifier.so (or .dylib)"
