@@ -18,3 +18,5 @@ eval/render/*_halfframe.png
 eval/render/*_1to1.png
 eval/render/*_small.png
 dist/
+# darktable integration: generated header is committed; build output is not
+darktable/build/
