@@ -62,7 +62,7 @@ def api(base: str, token: str, method: str, path: str, body=None, raw: bytes | N
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("archive")
+    ap.add_argument("archive", nargs="?", help="archive to upload (omit with --deposition to only update metadata / publish)")
     ap.add_argument("--metadata", required=True, help="JSON with title, description, creators, license, keywords, ... (from tools/make_dataset.py)")
     ap.add_argument("--sandbox", action="store_true")
     ap.add_argument("--publish", action="store_true")
@@ -81,7 +81,15 @@ def main():
         dep_id = int(a.deposition)
         api(base, tok, "PUT", f"/deposit/depositions/{dep_id}", body={"metadata": meta})
         dep = api(base, tok, "GET", f"/deposit/depositions/{dep_id}")
-        print(f"deposition {dep_id}: {dep['links']['html']}  files: {[f['filename'] for f in dep.get('files', [])]}")
+        if a.archive:  # replace the draft's files
+            for f in dep.get("files", []):
+                api(base, tok, "DELETE", f["links"]["self"])
+                print(f"removed {f['filename']}")
+            p = Path(a.archive)
+            print(f"uploading {p.name} ({p.stat().st_size / 1e6:.0f} MB) ...", flush=True)
+            api(base, tok, "PUT", f"{dep['links']['bucket']}/{p.name}", raw=p.read_bytes(), content_type="application/octet-stream")
+            dep = api(base, tok, "GET", f"/deposit/depositions/{dep_id}")
+        print(f"deposition {dep_id}: {dep['links']['html']}  files: {[(f['filename'], f['checksum']) for f in dep.get('files', [])]}")
         if a.publish:
             dep = api(base, tok, "POST", f"/deposit/depositions/{dep_id}/actions/publish")
             print(f"published: {dep['links']['record_html']}  DOI {dep['doi']}  concept DOI {dep.get('conceptdoi')}")

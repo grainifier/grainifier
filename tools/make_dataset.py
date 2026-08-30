@@ -14,9 +14,35 @@ import argparse
 import hashlib
 import io
 import json
+import re
 import tarfile
 import time
 from pathlib import Path
+
+import numpy as np
+
+PER_PATCH = ("mean_d", "mean_rgb", "var", "cov", "lowfrac", "skew", "kurt", "sel")
+
+
+def anonymise_frame(data: bytes, seed: int) -> bytes:
+    """Shuffle the per-patch arrays (same permutation for all) so the file no longer holds a
+    thumbnail of the negative. Aggregation never uses patch position, so profiles are unchanged."""
+    with np.load(io.BytesIO(data), allow_pickle=False) as z:
+        d = {k: z[k] for k in z.files}
+    n = len(d["mean_d"])
+    perm = np.random.default_rng(seed).permutation(n)
+    for k in PER_PATCH:
+        if k in d:
+            d[k] = d[k][perm]
+    buf = io.BytesIO()
+    np.savez_compressed(buf, **d)
+    return buf.getvalue()
+
+
+def public_roll_name(roll: str, profile: str) -> str:
+    """'1022 - Ilford HP5 Push 1600 Simon Yuna' -> '1022-hp5-1600' (roll number + profile only)."""
+    m = re.match(r"\s*(\d{4})", roll)
+    return f"{m.group(1)}-{profile}" if m else profile
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -30,7 +56,9 @@ Coolscan V ED at 4000 dpi (VueScan RAW DNG, linear transmittance): per 32×32-px
 mean negative density, plane-detrended variance per channel, R/G/B covariances, low-frequency
 power fraction, skewness and kurtosis; plus the green-channel power spectrum summed per
 0.1-D density bin, a density histogram, scanner metadata and the patch-selection threshold.
-There is no image content — the arrays cannot be inverted to a picture.
+The per-patch arrays are stored in a shuffled order (positions discarded), so the files hold
+no image content and cannot be turned back into a picture; rolls are identified by number and
+stock only.
 
 Rebuild a profile: `grainifier aggregate frames/<profile> -o out.json --plots plots/`.
 Field definitions: `grainifier/stats.py` and `grainifier/profile.py` in the repository.
@@ -72,8 +100,10 @@ def main():
         top = f"grainifier-frame-stats-{a.version}"
         for f in sorted(Path(a.frames).rglob("*.npz")):
             rel = f.relative_to(a.frames)
-            data = f.read_bytes()
-            add_bytes(tf, f"{top}/frames/{rel.as_posix()}", data)
+            profile, roll = rel.parts[0], rel.parts[1]
+            public = f"{top}/frames/{profile}/{public_roll_name(roll, profile)}/{f.name}"
+            data = anonymise_frame(f.read_bytes(), seed=int(hashlib.sha256(public.encode()).hexdigest()[:8], 16))
+            add_bytes(tf, public, data)
             n += 1
         for f in sorted(Path(a.profiles).glob("*.json")):
             add_bytes(tf, f"{top}/profiles/{f.name}", f.read_bytes())
@@ -83,7 +113,7 @@ def main():
             "title": f"grainifier frame statistics dataset {a.version}",
             "upload_type": "dataset",
             "description": DATASET_README.split("\n\n", 1)[1].replace("\n", " "),
-            "creators": [{"name": "Fyhr, Pontus"}],
+            "creators": [{"name": "Fyhr, Pontus", "orcid": "0009-0009-8733-214X"}],
             "license": "CC-BY-4.0",
             "access_right": "open",
             "keywords": ["film grain", "photographic emulsion", "noise power spectrum", "Ilford HP5 Plus", "Kodak Double-X 5222", "film scanning"],
