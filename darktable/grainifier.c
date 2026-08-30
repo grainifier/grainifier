@@ -202,10 +202,35 @@ void process(dt_iop_module_t *self,
   const float pitch_full = d->film_width_um / long_side;       // µm per full-resolution pixel
   const float pitch_out = pitch_full / roi_out->scale;          // µm per output pixel in this ROI
 
-  // lattice: the scanner pitch, or coarser (decimated) when the output pixel is coarser
+  // lattice: the scanner pitch, or coarser (decimated) when the output pixel is coarser. Pick the
+  // decimation nearest (in log) to the pitch ratio and correct its variance to the value the exact
+  // box-averaged field would have at this ratio (log-log interpolation of the tabulated variances).
   const float ratio = pitch_out / prof->pitch_um;
   int dec = 0;
-  while(dec + 1 < GRAINIFIER_N_DEC && grainifier_decimations[dec + 1] <= ratio + 1e-3f) dec++;
+  float var_scale = 1.0f;
+  if(ratio > 1.0f)
+  {
+    const float lr = logf(ratio);
+    float best = 1e9f;
+    for(int k = 0; k < GRAINIFIER_N_DEC; k++)
+    {
+      const float dist = fabsf(logf((float)grainifier_decimations[k]) - lr);
+      if(dist < best) { best = dist; dec = k; }
+    }
+    // interpolate the true variance between the bracketing table entries
+    int lo = 0;
+    while(lo + 1 < GRAINIFIER_N_DEC && grainifier_decimations[lo + 1] <= ratio) lo++;
+    float var_true;
+    if(lo + 1 < GRAINIFIER_N_DEC)
+    {
+      const float l0 = logf((float)grainifier_decimations[lo]), l1 = logf((float)grainifier_decimations[lo + 1]);
+      const float t = (lr - l0) / (l1 - l0);
+      var_true = expf(logf(prof->dec_var[lo]) * (1.0f - t) + logf(prof->dec_var[lo + 1]) * t);
+    }
+    else
+      var_true = prof->dec_var[lo] * powf((float)grainifier_decimations[lo] / ratio, 2.0f); // beyond the table: ~1/area
+    var_scale = sqrtf(var_true / prof->dec_var[dec]);
+  }
   const int m = grainifier_decimations[dec];
   const float lattice_um = prof->pitch_um * m;
   const int K = (m == 1) ? GRAINIFIER_KERNEL : GRAINIFIER_DEC_KERNEL;
@@ -214,7 +239,7 @@ void process(dt_iop_module_t *self,
   const int ri = (m == 1) ? 0 : dec + 1;
   const float rho_x = d->rho_x[ri], rho_y = d->rho_y[ri], rho_xy = d->rho_xy[ri];
   // fine lattice with the full 15×15 kernel has unit variance; decimated kernels carry theirs
-  const float amount = d->grain_scale;
+  const float amount = d->grain_scale * var_scale;
   const float bp = d->black_point, wp = d->white_point, gam = d->gamma;
   const float inv_gam = 1.0f / gam;
   const uint32_t seed = d->seed;

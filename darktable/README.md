@@ -51,5 +51,13 @@ Upstreaming it is the way to reach users; the module is written to darktable's c
 
 Branch `darktable`. Builds and runs against darktable 5.6.1 (macOS/Homebrew). Validated
 headlessly with `darktable-cli`: a 24-MP export through the module matches the Python renderer's
-output within 1–2 % in grain σ at every tone (`docs/research-notes.md`). Not yet: OpenCL path,
+output within 1–2 % in grain σ at every tone; reduced-size exports with the pipe at reduced scale
+(zoomed-out preview / `--hq false`) match within 3–5 % via the decimated kernels. With darktable's
+default high-quality export (full-res pipe, then downsampling) the grain in a downsized export is
+~12 % stronger than a box average — darktable's resampling filter keeps more of it, like a sharper
+enlarger lens.
+
+Headless test recipe: `darktable-cli in.jpg in.jpg.xmp out.png --core --datadir build/share/darktable --moduledir build/lib/darktable`
+with an XMP whose history has one entry `operation="grainifier" modversion="1" params="<hex of the params struct>"`
+(struct: int profile, float film_width, grain_scale, black_point, white_point, gamma, int seed — little-endian). Not yet: OpenCL path,
 per-density NPS (one kernel per profile), softness control, upstream PR.

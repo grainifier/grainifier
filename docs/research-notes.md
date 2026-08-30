@@ -128,3 +128,8 @@ Quantile-matched P(D) for two workflows. VueScan's own `inv*` output (9 frames, 
 | NLP | 2.19 / 0.99 / 0.67 / 0.59 | ≈ 2.2, black point often raised to D 0.2–0.6 |
 
 Consequences: `ScanCurve` defaults are now 0.03 / 2.6 / 1.45 (`--scan-preset vuescan`); `--scan-preset nlp` = 0.20 / 2.6 / 2.2 approximates the NLP look, whose positives carry ~1.5–2× more grain at the same tone. Tone placement with the new defaults: L 0.05 / 0.24 / 0.79 → D 0.36 / 0.99 / 2.21 (measured on real frames: 0.4 / 1.0 / 2.1). Scripts: scratch `fit_scancurve.py` / `slopes.py` (to be folded into a `grainifier scancurve` command).
+
+## darktable module (branch `darktable`, 2026-08-30)
+`darktable/grainifier.c`: the same model as the renderer inside darktable's pixelpipe — hashed white noise on a lattice at the scanner pitch in film µm ⊛ the measured 15×15 kernel (or one of 8 precomputed decimated 9×9 kernels for coarser output pixels, each carrying the box-averaged field's variance), skew and σ_D(D) per pixel, scan-curve placement and return; exact variance compensation for bilinear interpolation between lattice nodes. Built against darktable 5.6.1.
+
+Validation with darktable-cli against the Python renderer on the same image (σ_logL per tone): full-res 24 MP export 0.98–1.00; 2000-px and 1000-px exports with the pipe at reduced scale 0.95–1.03; darktable's default high-quality export (full-res pipe + its own downsampling) 1.09–1.15 — darktable's resampler keeps more fine grain than the renderer's box average.

@@ -77,6 +77,7 @@ def main():
     out.append(f"  float skew[GRAINIFIER_GRID_N];")
     out.append(f"  float kernel[GRAINIFIER_KERNEL * GRAINIFIER_KERNEL]; /* unit sum of squares */")
     out.append(f"  float dec_kernel[GRAINIFIER_N_DEC][GRAINIFIER_DEC_KERNEL * GRAINIFIER_DEC_KERNEL]; /* per decimation, scaled so noise ⊛ k has the box-averaged variance */")
+    out.append(f"  float dec_var[GRAINIFIER_N_DEC]; /* variance of the box-averaged field per decimation (m=1 → 1) */")
     out.append("} grainifier_profile_t;", )
     out.append("")
     entries = []
@@ -103,10 +104,13 @@ def main():
         out.append("  { " + ", ".join(f"{v:.6f}f" for v in kk.ravel()) + " },")
         rng = np.random.default_rng(1)
         out.append("  {")
+        variances = []
         for m in DECIMATIONS:
             dk, var = decimated_kernel(p.kernel, m, rng)
+            variances.append(var)
             out.append(f"    /* m={m}, variance {var:.4f} */ {{ " + ", ".join(f"{v:.6f}f" for v in dk.ravel()) + " },")
         out.append("  },")
+        out.append("  { " + ", ".join(f"{v:.5f}f" for v in variances) + " },")
         out.append("};")
         entries.append(f"&grainifier_profile_{ident}")
     out.append("")
