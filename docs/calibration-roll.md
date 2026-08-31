@@ -6,9 +6,17 @@ Purpose: measure (a) the characteristic curve D(log E) for *your* process and (b
 - Target: matte 18 % grey card, **over-filling the frame** (50 mm at ~0.7–1 m on an A4 card, edges well outside the finder). Slightly **defocused** (focus at ~2 m) so paper texture doesn't register.
 - Light: **overcast sky / open shade outdoors**, card ~45° to the sky, no glare, no direct sun. No LED panels unless known flicker-free (PWM + fast shutter = random exposure errors). Meter at start and end of the sequence; redo if it drifted.
 - Aperture f/5.6–f/8 for the bracket (vignetting ≤ ~0.2 stop; the curve is fitted on the central ~60 % of the frame).
-- Sequence per roll: meter the card ("0"); **shutter bracket in full stops −5…+5 at fixed aperture** (11 frames); repeat with the aperture closed ½ stop (11 frames) → ½-stop spacing. All exposures ≤ 1 s (reciprocity). **2 frames lens cap on** (Dmin), **1 frame ≈ +8 stops** (Dmax). **1 frame slanted edge** (black card on the grey card, edge tilted ~5°, in focus, f/5.6) → whole-chain MTF, separates scanner MTF from grain. Remaining frames: ordinary pictures.
+- Sequence per roll (~20 frames): meter the card ("0"); **shutter bracket in full stops −4…+4 at fixed aperture** (9 frames); repeat with the aperture closed ½ stop (9 frames) → ½-stop spacing. All exposures ≤ 1 s (reciprocity). **1 frame ≈ +8 stops** (Dmax). **1 frame slanted edge** (black card on the grey card, edge tilted ~5°, in focus, f/5.6) → whole-chain MTF, separates scanner MTF from grain. Dmin (fog) comes free from the unexposed leader and the gaps between frames. Remaining ~16 frames: ordinary pictures.
 - Log every frame: shutter, aperture, meter reading, light. Develop **exactly as usual** (same lab / push order as the archive) so the curve describes the rolls already profiled.
-- Rolls: HP5+ @1600 first, then BWXX @250; HP5+ @400 optional.
+- Rolls (ordered 2026-08-31, 4× HP5+ 135-36):
+  | roll | EI / lab order | purpose |
+  |---|---|---|
+  | 1 | HP5+ @1600, +2 push, same lab as the archive | curve + clean σ_D(D) for the shipped profile |
+  | 2 | HP5+ @1600, identical, shot on another day | roll-to-roll / lab spread, insurance for roll 1 |
+  | 3 | HP5+ @400, normal | box-speed profile (none in the archive) |
+  | 4 | HP5+ @3200, +3 push | push axis 400 / 1600 / 3200 for interpolation |
+  | – | BWXX @250 from the bulk roll | curve for the BWXX profiles |
+  Colour deferred (dye clouds break the R/G/B common-grain scanner-noise split; would need the 8× re-scan variance instead).
 
 ## Scanning (Coolscan V / VueScan)
 - **Single pass**, 4000 dpi, 16-bit RAW DNG, no ICE (silver blocks IR anyway), no sharpening, no multi-exposure. **Lock exposure** on the mid-grey frame (VueScan: preview → *Lock exposure* → *Lock film base color*) and scan every frame of the roll with those locks — with auto-exposure the densities of different frames are not comparable.
